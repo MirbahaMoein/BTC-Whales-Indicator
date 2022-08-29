@@ -68,6 +68,7 @@ def show_chart(df):
 
     ax1twin = ax1.twinx()
     ax1twin.plot(df['time'], df['totalbalance_btc'], color='green')
+    ax1twin.plot(df['time'], df['fastbalancemovingaverage'], color='blue')
 
     plt.grid('x')
     plt.show()
