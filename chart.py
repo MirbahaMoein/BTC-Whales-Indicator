@@ -76,7 +76,7 @@ def show_chart(df):
 
 def main():
     (connection, cursor) = connect_db()
-    df, status = get_table(cursor, mode=500)
+    df, status = get_table(cursor, mode=100)
     connection.close()
     if status:
         df = add_regression(df)
