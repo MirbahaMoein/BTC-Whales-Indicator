@@ -37,9 +37,9 @@ def add_regression(df):
 
 def add_moving_averages(df, span):
     df['slowbalancemovingaverage'] = df['totalbalance_btc'].ewm(
-        span=span).mean()
+        span=span*15).mean()
     df['fastbalancemovingaverage'] = df['totalbalance_btc'].ewm(
-        span=span * 15).mean()
+        span=span).mean()
     return df
 
 
@@ -58,10 +58,9 @@ def show_chart(df):
     ax1.set_ylabel('btc price', color='red')
     ax1.set_yscale('log')
 
-    ax1.plot(df['time'], df['btcprice'], color='red')
+    ax1.plot(df['time'], df['btcprice'], color='black')
 
-    ax2.plot(df['time'], df['fastbalancemovingaverage'] -
-             df['slowbalancemovingaverage'], color='green')
+    ax2.plot(df['time'], df['fastbalancemovingaverage'] - df['slowbalancemovingaverage'], color='green')
     
     ax2.plot(df['time'], [0] * len(df), color= 'gray')
     ax2.set_ylabel('balance fast EMA - balance slow EMA', color='green')
@@ -69,6 +68,7 @@ def show_chart(df):
     ax1twin = ax1.twinx()
     ax1twin.plot(df['time'], df['totalbalance_btc'], color='green')
     ax1twin.plot(df['time'], df['fastbalancemovingaverage'], color='blue')
+    ax1twin.plot(df['time'], df['slowbalancemovingaverage'], color='red')
 
     plt.grid('x')
     plt.show()
@@ -76,11 +76,11 @@ def show_chart(df):
 
 def main():
     (connection, cursor) = connect_db()
-    df, status = get_table(cursor, mode=1000)
+    df, status = get_table(cursor, mode=500)
     connection.close()
     if status:
         df = add_regression(df)
-        df = add_moving_averages(df, 24)
+        df = add_moving_averages(df, 48)
         df = convert_to_datetime(df)
         show_chart(df)
 
