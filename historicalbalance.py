@@ -7,7 +7,7 @@ cursor = connection.cursor()
 
 
 cursor.execute("DROP TABLE IF EXISTS public.historicalbalance")
-cursor.execute("CREATE TABLE IF NOT EXISTS historicalbalance (time bigint PRIMARY KEY, totalbalance_btc integer, btcprice integer, totalbalance100_usd bigint, totalbalance500_usd bigint, totalbalance1000_usd bigint)")
+cursor.execute("CREATE TABLE IF NOT EXISTS historicalbalance (time bigint PRIMARY KEY, totalbalance100_btc integer, totalbalance500_btc integer, totalbalance1000_btc integer, btcprice integer)")
 
 
 klines = cursor.execute(
@@ -24,7 +24,9 @@ for itrtr in tqdm(range(0, len(klines), 60), desc = 'time', position= 0):
     candlelow = kline[3]
     candleclose = kline[4]
     candlevolume = kline[5]
-    totalbalance = 0
+    totalbalance100 = 0
+    totalbalance500 = 0
+    totalbalance1000 = 0
     for wallet in tqdm(enumerate(selectedwallets), desc= 'wallet', position = 1, leave = False):
         walletrank = wallet[0]
         walletaddress = wallet[1][0]
@@ -32,17 +34,26 @@ for itrtr in tqdm(range(0, len(klines), 60), desc = 'time', position= 0):
             lasttx = cursor.execute(
                 "SELECT * FROM public.transactions WHERE time < %s AND address = %s ORDER BY time DESC", (candletime, walletaddress)).fetchone()
             walletbalance = lasttx[4]
-            totalbalance += walletbalance
+            if walletrank < 100:
+                totalbalance100 += walletbalance
+            elif walletrank < 500:
+                totalbalance100 += walletbalance
+                totalbalance500 += walletbalance
+            elif walletrank < 1000:
+                totalbalance100 += walletbalance
+                totalbalance500 += walletbalance
+                totalbalance1000 += walletbalance
+                
         except:
             pass
 
     try:
-        cursor.execute("INSERT INTO public.historicalbalance VALUES (%s, %s, %s, %s)",
-                       (candletime, totalbalance, candleopen, totalbalance * candleopen))
+        cursor.execute("INSERT INTO public.historicalbalance VALUES (%s, %s, %s, %s, %s)",
+                       (candletime, totalbalance100, totalbalance500, totalbalance1000, candleopen))
     except:
         cursor.execute("ROLLBACK")
-        cursor.execute("UPDATE public.historicalbalance SET totalbalance_btc = %s, btcprice = %s, totalbalance_usd = %s WHERE time = %s",
-                       (totalbalance, candleopen, totalbalance * candleopen, candletime))
+        cursor.execute("UPDATE public.historicalbalance SET totalbalance100_btc = %s, totalbalance500_btc = %s, totalbalance1000_btc = %s, btcprice = %s WHERE time = %s",
+                       (totalbalance100, totalbalance500, totalbalance1000, candleopen, candletime))
     connection.commit()
 
 connection.close()
