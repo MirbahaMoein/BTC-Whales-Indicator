@@ -16,7 +16,7 @@ selectedwallets = cursor.execute(
     "SELECT DISTINCT address, balance_price_correlation FROM public.wallets WHERE balance_price_correlation != 'NaN' AND balance_price_correlation > 0 ORDER BY balance_price_correlation DESC").fetchall()
 
 
-for itrtr in tqdm(range(0, len(klines), 60), desc = 'time', position= 0):
+for itrtr in tqdm(range(0, len(klines), 60), desc='time', position=0):
     kline = klines[itrtr]
     candletime = kline[0]
     candleopen = kline[1]
@@ -27,7 +27,7 @@ for itrtr in tqdm(range(0, len(klines), 60), desc = 'time', position= 0):
     totalbalance100 = 0
     totalbalance500 = 0
     totalbalance1000 = 0
-    for wallet in tqdm(enumerate(selectedwallets), desc= 'wallet', position = 1, leave = False):
+    for wallet in tqdm(enumerate(selectedwallets), desc='wallet', position=1, leave=False):
         walletrank = wallet[0]
         walletaddress = wallet[1][0]
         try:
@@ -43,7 +43,7 @@ for itrtr in tqdm(range(0, len(klines), 60), desc = 'time', position= 0):
                 totalbalance100 += walletbalance
                 totalbalance500 += walletbalance
                 totalbalance1000 += walletbalance
-                
+
         except:
             pass
 

@@ -24,9 +24,10 @@ def generatetimestamps(cursor) -> tuple:
         firstopentimestamp = int(datetime.now().timestamp() * 1000)
 
     nowtimestamp = int(datetime.now().timestamp()*1000)
-    
+
     return firstopentimestamp, lastopentimestamp, nowtimestamp
-    
+
+
 def updateklines():
     connection, cursor = connectdb()
     firsttimestamp, lasttimestamp, nowtimestamp = generatetimestamps(cursor)
@@ -35,7 +36,8 @@ def updateklines():
 
     timestamp = nowtimestamp
     while timestamp > lasttimestamp - 1000*60*1000:
-        print("Updating Klines:","%.2f"%((nowtimestamp - timestamp) / (nowtimestamp - datetime(2018,1,1).timestamp()*1000) * 100),"%")
+        print("Updating Klines:", "%.2f" % ((nowtimestamp - timestamp) /
+              (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000) * 100), "%")
         try:
             table = client.klines(
                 "BTCUSDT", "1m", startTime=timestamp - 1000*60*1000, endTime=timestamp, limit=1000)
@@ -52,7 +54,7 @@ def updateklines():
                 volume = data["volume"][i]
                 try:
                     cursor.execute("INSERT INTO klines VALUES (%s,%s,%s,%s,%s,%s)",
-                                (dtime, open, high, low, close, volume))
+                                   (dtime, open, high, low, close, volume))
                 except:
                     pass
                 connection.commit()
@@ -78,15 +80,17 @@ def updateklines():
                 volume = data["volume"][i]
                 try:
                     cursor.execute("INSERT INTO klines VALUES (%s,%s,%s,%s,%s,%s)",
-                                (dtime, open, high, low, close, volume))
+                                   (dtime, open, high, low, close, volume))
                 except:
                     pass
                 connection.commit()
         except:
             break
         timestamp -= 1000*60*1000
-        print("Updating Klines:", "%.2f"%((nowtimestamp - timestamp) / (nowtimestamp - datetime(2018,1,1).timestamp()*1000) * 100), "%")
+        print("Updating Klines:", "%.2f" % ((nowtimestamp - timestamp) /
+              (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000) * 100), "%")
 
     connection.close()
+
 
 updateklines()
