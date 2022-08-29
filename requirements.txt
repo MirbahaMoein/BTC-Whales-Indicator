@@ -1,0 +1,10 @@
+requests
+psycopg[binary]
+beautifulsoup4
+regex
+tqdm
+matplotlib
+pandas
+scikit-learn
+numpy
+binance-connector
