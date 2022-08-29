@@ -52,8 +52,8 @@ def convert_to_datetime(df):
 def show_chart(df):
     (ax1, ax2) = plt.subplots(2)[1]
 
-    ax1.set_xlabel('timestamp')
-    ax1.set_ylabel('balance fast EMA - balance slow EMA', color='green')
+    ax1.set_xlabel('time')
+    
 
     ax1.set_ylabel('btc price', color='red')
     ax1.set_yscale('log')
@@ -64,9 +64,11 @@ def show_chart(df):
              df['slowbalancemovingaverage'], color='green')
     
     ax2.plot(df['time'], [0] * len(df), color= 'gray')
+    ax2.set_ylabel('balance fast EMA - balance slow EMA', color='green')
 
     ax1twin = ax1.twinx()
     ax1twin.plot(df['time'], df['totalbalance_btc'], color='green')
+
     plt.grid('x')
     plt.show()
 
