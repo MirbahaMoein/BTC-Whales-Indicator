@@ -66,6 +66,7 @@ def show_chart(df):
     ax2.set_ylabel('balance fast EMA - balance slow EMA', color='green')
 
     ax1twin = ax1.twinx()
+    ax1twin.set_yscale('log')
     ax1twin.plot(df['time'], df['totalbalance_btc'], color='green')
     ax1twin.plot(df['time'], df['fastbalancemovingaverage'], color='blue')
     ax1twin.plot(df['time'], df['slowbalancemovingaverage'], color='red')
