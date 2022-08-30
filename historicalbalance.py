@@ -17,13 +17,12 @@ selectedwallets = cursor.execute(
 
 
 for itrtr in tqdm(range(0, len(klines), 60), desc='time', position=0):
-    kline = klines[itrtr]
-    candletime = kline[0]
-    candleopen = kline[1]
-    candlehigh = kline[2]
-    candlelow = kline[3]
-    candleclose = kline[4]
-    candlevolume = kline[5]
+    candletime = klines[itrtr][0]
+    candleopen = klines[itrtr][1]
+    candlehigh = klines[itrtr][2]
+    candlelow = klines[itrtr][3]
+    candleclose = klines[itrtr][4]
+    candlevolume = klines[itrtr][5]
     totalbalance100 = 0
     totalbalance500 = 0
     totalbalance1000 = 0
