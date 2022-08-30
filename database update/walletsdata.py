@@ -29,7 +29,8 @@ def changeip():
     frequency = 2500
     duration = 200
     winsound.Beep(frequency, duration)
-    input("\n", "After you've changed IP adress, Press Enter to continue...")
+    print("\n")
+    input("After you've changed IP adress, Press Enter to continue...")
 
 
 def createtables():
