@@ -42,7 +42,6 @@ for itrtr in tqdm(range(0, len(klines), 60), desc='time', position=0):
                 totalbalance100 += walletbalance
                 totalbalance500 += walletbalance
                 totalbalance1000 += walletbalance
-
         except:
             pass
 

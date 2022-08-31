@@ -1,7 +1,8 @@
-import binance.spot  # pip install binance-connector
+import binance.spot
 import pandas as pd
 from datetime import *
 import psycopg
+from tqdm import tqdm
 
 
 def connectdb() -> tuple[psycopg.Connection, psycopg.Cursor]:
@@ -35,9 +36,11 @@ def updateklines():
     client = binance.spot.Spot()
 
     timestamp = nowtimestamp
+
+    pbar = tqdm(total = (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000))
+
     while timestamp > lasttimestamp - 1000*60*1000:
-        print("Updating Klines:", "%.2f" % ((nowtimestamp - timestamp) /
-              (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000) * 100), "%")
+  
         try:
             table = client.klines(
                 "BTCUSDT", "1m", startTime=timestamp - 1000*60*1000, endTime=timestamp, limit=1000)
@@ -61,8 +64,12 @@ def updateklines():
         except:
             break
         timestamp -= 1000*60*1000
+        pbar.update(1000*60*1000)
 
     timestamp = firsttimestamp + 1000*60*1000
+
+    pbar = tqdm(total = (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000))
+
     while timestamp > datetime(2018, 1, 1).timestamp()*1000:
         try:
             table = client.klines(
@@ -87,8 +94,8 @@ def updateklines():
         except:
             break
         timestamp -= 1000*60*1000
-        print("Updating Klines:", "%.2f" % ((nowtimestamp - timestamp) /
-              (nowtimestamp - datetime(2018, 1, 1).timestamp()*1000) * 100), "%")
+
+        pbar.update(1000*60*1000)
 
     connection.close()
 
