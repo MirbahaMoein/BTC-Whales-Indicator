@@ -20,9 +20,10 @@ This project aims to create an indicator that could predict bitcoin price moveme
 
 Note: This program is only working and being tested on Windows 11-x64, Python 3.10.6, so:
 
-- First, Install Python 3.10.6 from: https://www.python.org/ftp/python/3.10.6/python-3.10.6-amd64.exe 
-- Then you should download and install PostgreSQL-14.5 on your PC from: https://get.enterprisedb.com/postgresql/postgresql-14.5-1-windows-x64.exe
-- For the next step, you should run the commands below in windows CLI:
+- Clone this repository on your PC
+- Install Python 3.10.6 from: https://www.python.org/ftp/python/3.10.6/python-3.10.6-amd64.exe 
+- Download and install PostgreSQL-14.5 on your PC from: https://get.enterprisedb.com/postgresql/postgresql-14.5-1-windows-x64.exe
+- Run the commands below in windows CLI:
 ```
 cd "PATH/TO/PROGRAMS/MAIN/FOLDER"
 ```
