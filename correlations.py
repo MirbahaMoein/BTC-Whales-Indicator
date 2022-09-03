@@ -66,7 +66,7 @@ def slopes(wallets):
 
         prices = getpricerows(timeframestart, timeframestop)
         priceslope = regressionslope(prices)
-        
+
         for wallet in wallets:
             balances = getbalancerows(wallet[0], timeframestart, timeframestop)
             balanceslope = regressionslope(balances)
@@ -77,9 +77,8 @@ def slopes(wallets):
                 cursor.execute("ROLLBACK")
                 cursor.execute("UPDATE public.slopes SET priceslope = %s, walletslope = %s WHERE (starttime = %s AND walletaddress = %s)",
                                (priceslope, balanceslope, timeframestart, wallet[0]))
-                               
-            connection.commit()
 
+            connection.commit()
 
 
 def correlations(wallets):
@@ -97,9 +96,10 @@ def correlations(wallets):
 
 def main():
     connect_db()
-    wallets = get_wallet_addresses() 
+    wallets = get_wallet_addresses()
     slopes(wallets)
     correlations(wallets)
     connection.close()
+
 
 main()
