@@ -57,7 +57,7 @@ def get_wallet_addresses() -> list:
 
 
 def slopes(wallets):
-    timeframems, firstcandletime = timeframes(1)
+    timeframems, firstcandletime = timeframes(1/4)
     loopstop = int(datetime.now().timestamp()*1000 - timeframems)
 
     for timestamp in tqdm(range(firstcandletime, loopstop, timeframems)):

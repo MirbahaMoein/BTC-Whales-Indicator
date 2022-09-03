@@ -16,7 +16,7 @@ selectedwallets = cursor.execute(
     "SELECT DISTINCT address, balance_price_correlation FROM public.wallets WHERE balance_price_correlation != 'NaN' AND balance_price_correlation > 0 ORDER BY balance_price_correlation DESC").fetchall()
 
 
-for itrtr in tqdm(range(0, len(klines), 60), desc='time', position=0):
+for itrtr in tqdm(range(0, len(klines), 360), desc='time', position=0):
     candletime = klines[itrtr][0]
     candleopen = klines[itrtr][1]
     candlehigh = klines[itrtr][2]
