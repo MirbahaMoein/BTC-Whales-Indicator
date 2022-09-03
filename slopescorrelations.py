@@ -12,7 +12,10 @@ def connect_db():
         "dbname = NURAFIN user = postgres password = NURAFIN")
     cursor = connection.cursor()
     cursor.execute(
+        "DROP TABLE IF EXISTS slopes")
+    cursor.execute(
         "CREATE TABLE IF NOT EXISTS slopes (starttime bigint, endtime bigint, walletaddress varchar(255), priceslope double precision, walletslope double precision, PRIMARY KEY(starttime, walletaddress))")
+
 
 
 def timeframes(timeframedays: int):
@@ -57,7 +60,7 @@ def get_wallet_addresses() -> list:
 
 
 def slopes(wallets):
-    timeframems, firstcandletime = timeframes(1/4)
+    timeframems, firstcandletime = timeframes(7)
     loopstop = int(datetime.now().timestamp()*1000 - timeframems)
 
     for timestamp in tqdm(range(firstcandletime, loopstop, timeframems)):
