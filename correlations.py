@@ -44,7 +44,8 @@ def regressionslope(rows: list) -> float:
         x = np.array(xs).reshape((-1, 1))
         y = np.array(ys)
         model = LinearRegression().fit(x, y)
-        return float(model.coef_[0])
+        coef = float(model.coef_[0])
+        return coef
     except:
         return 0
 
@@ -55,11 +56,9 @@ def get_wallet_addresses() -> list:
     return wallets
 
 
-def slopes():
-    connect_db()
+def slopes(wallets):
     timeframems, firstcandletime = timeframes(1)
     loopstop = int(datetime.now().timestamp()*1000 - timeframems)
-    wallets = get_wallet_addresses()
 
     for timestamp in tqdm(range(firstcandletime, loopstop, timeframems)):
         timeframestart = timestamp
@@ -67,26 +66,23 @@ def slopes():
 
         prices = getpricerows(timeframestart, timeframestop)
         priceslope = regressionslope(prices)
-
+        
         for wallet in wallets:
             balances = getbalancerows(wallet[0], timeframestart, timeframestop)
-            balancesslope = regressionslope(balances)
+            balanceslope = regressionslope(balances)
             try:
                 cursor.execute("INSERT INTO public.slopes VALUES (%s, %s, %s, %s, %s)",
-                               (timeframestart, timeframestop, wallet[0], priceslope, balancesslope))
+                               (timeframestart, timeframestop, wallet[0], priceslope, balanceslope))
             except:
                 cursor.execute("ROLLBACK")
                 cursor.execute("UPDATE public.slopes SET priceslope = %s, walletslope = %s WHERE (starttime = %s AND walletaddress = %s)",
-                               (priceslope, balancesslope, timeframestart, wallet[0]))
+                               (priceslope, balanceslope, timeframestart, wallet[0]))
+                               
             connection.commit()
 
-    connection.close()
 
 
-def correlations():
-    connect_db()
-    wallets = cursor.execute(
-        "SELECT DISTINCT walletaddress FROM public.slopes").fetchall()
+def correlations(wallets):
     for wallet in tqdm(wallets):
         walletaddress = wallet[0]
         table = cursor.execute(
@@ -94,18 +90,16 @@ def correlations():
         df = pd.DataFrame(table, columns=[
                           'starttime', 'endtime', 'walletaddress', 'priceslope', 'walletslope'])
         correlation = df['priceslope'].corr(df['walletslope'])
-        if correlation == 'NaN':
-            print(df)
-            input("watch this error!")
         cursor.execute(
             "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, walletaddress))
         connection.commit()
-    connection.close()
 
 
 def main():
-    slopes()
-    correlations()
-
+    connect_db()
+    wallets = get_wallet_addresses() 
+    slopes(wallets)
+    correlations(wallets)
+    connection.close()
 
 main()
