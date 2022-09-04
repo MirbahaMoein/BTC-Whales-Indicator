@@ -70,7 +70,7 @@ def show_chart(df):
 
     axes[0,0].set_xlabel('time')
     axes[0,0].set_ylabel('price')
-    axes[0,0].plot(df['time'], df['btcprice'], color='black')
+    axes[0,0].plot(df['time'], df['btcprice'], color='green')
     axes[0,0].set_yscale('log')
 
     axes[0,1].set_xlabel('time')
@@ -95,7 +95,8 @@ def show_chart(df):
 
     axes[1,0].set_xlabel('time')
     axes[1,0].set_ylabel('Balance Trend Index')
-    axes[1,0].plot(df['time'], df['fasttotalbalanceMA'] - df['slowtotalbalanceMA'], color='black')
+    axes[1,0].plot(df['time'], df['totalbalance100_btc'] - df['slow100balanceMA'], color='yellow')
+    axes[1,0].plot(df['time'], [0] * len(df), color = 'black')
 
     plt.show()
 
@@ -105,7 +106,7 @@ def main():
     df = get_table(cursor)
     connection.close()
     df = add_regression(df)
-    df = add_moving_averages(df, 48)
+    df = add_moving_averages(df, 8)
     df = convert_to_datetime(df)
     show_chart(df)
 
