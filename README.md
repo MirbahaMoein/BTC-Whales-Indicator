@@ -13,7 +13,7 @@ This project aims to create an indicator that could predict bitcoin price moveme
 
 - Scrape top wallets data
 - Store data on a database
-- Analyze data and find wallets with a good correlation between their balance and bitcoin price on exchanges
+- Analyze data and find wallets with good correlation between balance and bitcoin price on Binance (BTC/USDT)
 - Visualize the price and total balance of selected wallets
 
 ## Installation
