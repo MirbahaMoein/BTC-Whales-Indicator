@@ -18,7 +18,8 @@ def connect_db():
 def get_table(cursor):
     table = cursor.execute(
         "SELECT * FROM public.historicalbalance ORDER BY time ASC").fetchall()
-    df = pd.DataFrame(table, columns=['time', 'totalbalance_btc', 'totalbalance100_btc', 'totalbalance500_btc', 'totalbalance1000_btc', 'btcprice'])
+    df = pd.DataFrame(table, columns=['time', 'totalbalance_btc', 'totalbalance100_btc',
+                      'totalbalance500_btc', 'totalbalance1000_btc', 'btcprice'])
     return df
 
 
@@ -65,40 +66,59 @@ def convert_to_datetime(df):
     return df
 
 
-def show_chart(df):
+def show_all_charts(df):
     axes = plt.subplots(2, 3)[1]
 
-    axes[0,0].set_xlabel('time')
-    axes[0,0].set_ylabel('price')
-    axes[0,0].plot(df['time'], df['btcprice'], color='green')
-    axes[0,0].set_yscale('log')
+    axes[0, 0].set_xlabel('time')
+    axes[0, 0].set_ylabel('price')
+    axes[0, 0].plot(df['time'], df['btcprice'], color='green')
+    axes[0, 0].set_yscale('log')
 
-    axes[0,1].set_xlabel('time')
-    axes[0,1].set_ylabel('total balance(100)')
-    axes[0,1].plot(df['time'], df['totalbalance100_btc'], color='black')
-    axes[0,1].set_yscale('log')
+    axes[0, 1].set_xlabel('time')
+    axes[0, 1].set_ylabel('total balance(100)')
+    axes[0, 1].plot(df['time'], df['totalbalance100_btc'], color='red')
+    axes[0, 1].set_yscale('log')
 
-    axes[0,2].set_xlabel('time')
-    axes[0,2].set_ylabel('total balance(500)')
-    axes[0,2].plot(df['time'], df['totalbalance500_btc'], color='black')
-    axes[0,2].set_yscale('log')
+    axes[0, 2].set_xlabel('time')
+    axes[0, 2].set_ylabel('total balance(500)')
+    axes[0, 2].plot(df['time'], df['totalbalance500_btc'], color='red')
+    axes[0, 2].set_yscale('log')
 
-    axes[1,1].set_xlabel('time')
-    axes[1,1].set_ylabel('total balance(1000)')
-    axes[1,1].plot(df['time'], df['totalbalance1000_btc'], color='black')
-    axes[1,1].set_yscale('log')
+    axes[1, 1].set_xlabel('time')
+    axes[1, 1].set_ylabel('total balance(1000)')
+    axes[1, 1].plot(df['time'], df['totalbalance1000_btc'], color='red')
+    axes[1, 1].set_yscale('log')
 
-    axes[1,2].set_xlabel('time')
-    axes[1,2].set_ylabel('total balance')
-    axes[1,2].plot(df['time'], df['totalbalance_btc'], color='black')
-    axes[1,2].set_yscale('log')
+    axes[1, 2].set_xlabel('time')
+    axes[1, 2].set_ylabel('total balance')
+    axes[1, 2].plot(df['time'], df['totalbalance_btc'], color='red')
+    axes[1, 2].set_yscale('log')
 
-    axes[1,0].set_xlabel('time')
-    axes[1,0].set_ylabel('Balance Trend Index')
-    axes[1,0].plot(df['time'], df['totalbalance100_btc'] - df['slow100balanceMA'], color='yellow')
-    axes[1,0].plot(df['time'], [0] * len(df), color = 'black')
+    axes[1, 0].set_xlabel('time')
+    axes[1, 0].set_ylabel('Balance Trend Index')
+    axes[1, 0].plot(df['time'], df['totalbalance100_btc'] -
+                    df['slow100balanceMA'], color='red')
+    axes[1, 0].plot(df['time'], [0] * len(df), color='black')
 
-    plt.show()
+    #plt.show()
+
+
+def show_chart(df):
+    axes = plt.subplots(2, 1)[1]
+
+    axes[0].set_xlabel('time')
+    axes[0].set_ylabel('price')
+    axes[0].plot(df['time'], df['btcprice'], color='green')
+    axes[0].set_yscale('log')
+
+    axes[1].set_xlabel('time')
+    axes[1].set_ylabel('Balance Trend Index(100)')
+    
+    axes[1].fill_between(df['time'], (df['fast100balanceMA'] - df['slow100balanceMA']), step="pre", alpha=0.4)
+    axes[1].plot(df['time'], (df['fast100balanceMA'] - df['slow100balanceMA']), color='red')
+    axes[1].plot(df['time'], [0] * len(df), color='black')
+
+    #plt.show()
 
 
 def main():
@@ -106,9 +126,10 @@ def main():
     df = get_table(cursor)
     connection.close()
     df = add_regression(df)
-    df = add_moving_averages(df, 8)
+    df = add_moving_averages(df, 12)
     df = convert_to_datetime(df)
+    show_all_charts(df)
     show_chart(df)
-
+    plt.show()
 
 main()
