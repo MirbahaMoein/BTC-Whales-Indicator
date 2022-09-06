@@ -39,8 +39,6 @@ def createtables():
             "CREATE TABLE IF NOT EXISTS wallets (url varchar(200), rank smallint, bestrank smallint, address varchar(100) PRIMARY KEY, walletname varchar(50), multisig varchar(50), balance_BTC real, topbalance_BTC real, firstin bigint, lastin bigint, firstout bigint, lastout bigint, ins integer, outs integer, updated boolean, partial boolean, balance_price_correlation real)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS transactions (address varchar(100), blocknumber integer, time bigint, amount_BTC real, balance_BTC real, balance_USD real, accprofit_USD real, PRIMARY KEY(address, time, balance_BTC))")
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS klines (time bigint PRIMARY KEY, open real, high real, low real, close real, volume real)")
         connection.commit()
     except:
         pass
