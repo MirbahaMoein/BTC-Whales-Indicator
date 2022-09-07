@@ -18,10 +18,25 @@ def fetch_wallets(cursor):
 
 
 def generate_balance_timeseries(wallets, connection, cursor):
+    firstpricecandlesaved = cursor.execute("SELECT MAX(time) FROM public.klines").fetchall()[0][0]
+    lastpricecandlesaved = cursor.execute("SELECT MAX(time) FROM public.klines").fetchall()[0][0]
     for wallet in tqdm(wallets, desc='Wallet', position=0):
         address = wallet[0]
         txs = cursor.execute(
             "SELECT time, balance_btc FROM public.transactions WHERE address = %s", (address,)).fetchall()
+        firsttx = cursor.execute(
+            "SELECT time FROM public.transactions WHERE address = %s ORDER BY time ASC LIMIT 1", (address,)).fetchall()
+        firsttxtime = firsttx[0][0]
+        lasttx = cursor.execute(
+            "SELECT time, balance_btc FROM public.transactions WHERE address = %s ORDER BY time DESC LIMIT 1", (address,)).fetchall()
+        lasttxtime = lasttx[0][0]
+        lastbalance = lasttx[0][1]
+        if firsttxtime > firstpricecandlesaved:
+            cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, %s)", (
+                    address, firstpricecandlesaved, firsttxtime - (firsttxtime % 3600000), 0))
+        if lasttxtime < lastpricecandlesaved:
+            cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, %s)", (
+                    address, lasttxtime, lastpricecandlesaved, lastbalance))
         for itrtr in tqdm(range(len(txs)-1), desc='Transaction', position=1, leave=False):
             tx1 = txs[itrtr]
             tx1time = tx1[0]
