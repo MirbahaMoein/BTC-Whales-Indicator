@@ -7,6 +7,8 @@ def connect_db():
     connection = pg.connect(
         "dbname = NURAFIN user = postgres password = NURAFIN")
     cursor = connection.cursor()
+    cursor.execute("UPDATE public.wallets SET balance_price_correlation = 0")
+    connection.commit()
     return connection, cursor
 
 
@@ -32,7 +34,7 @@ def calculate_correlation(wallets, connection, cursor, timeframe):
             else:
                 walletdf.loc[len(walletdf)] = {'time': timestamp, 'btc_price': btcprice, 'balance': timespans[0][0]}
         walletdf = walletdf.sort_values(by= 'time')
-        correlation = walletdf['btc_price'].corr(walletdf['balance'])
+        correlation = walletdf['btc_price'].corr(walletdf['balance'], method = 'spearman')
         cursor.execute("UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
         connection.commit()
 
