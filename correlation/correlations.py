@@ -16,10 +16,10 @@ def fetch_wallets(cursor):
 
 def calculate_correlation(wallets, connection, cursor, timeframe):
     klines = cursor.execute("SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0", (timeframe,)).fetchall()
-    for wallet in tqdm(wallets, desc= 'wallet', position= 0):
+    for wallet in tqdm(wallets, desc= 'Wallets', position= 0):
         walletdf = pd.DataFrame(columns = ['time', 'btc_price', 'balance'])
         address = wallet[0]
-        for kline in klines:
+        for kline in tqdm(klines, desc= 'Candles', position = 1, leave = False):
             timestamp = kline[0]
             btcprice = kline[1]
             timespans = cursor.execute("SELECT balance_btc FROM public.historicalwalletbalance WHERE (starttime < %s AND endtime > %s AND address = %s)",(timestamp, timestamp, address)).fetchall()
