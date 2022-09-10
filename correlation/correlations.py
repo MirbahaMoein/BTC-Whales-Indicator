@@ -34,7 +34,9 @@ def calculate_correlation(wallets, connection, cursor, timeframe):
             else:
                 walletdf.loc[len(walletdf)] = {'time': timestamp, 'btc_price': btcprice, 'balance': timespans[0][0]}
         walletdf = walletdf.sort_values(by= 'time')
-        correlation = walletdf['btc_price'].corr(walletdf['balance'], method = 'spearman')
+        walletdf['balancetrend'] = walletdf['balance'] - walletdf['balance'].rolling(4).mean() 
+        walletdf['pricetrend'] = walletdf['btc_price'] - walletdf['btc_price'].rolling(4).mean()
+        correlation = walletdf['balancetrend'].corr(walletdf['pricetrend'])
         cursor.execute("UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
         connection.commit()
 
