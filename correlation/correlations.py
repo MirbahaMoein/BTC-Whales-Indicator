@@ -23,7 +23,7 @@ def calculate_correlation(wallets, connection, cursor):
             starttime = timespan[0]
             endtime = timespan[1]
             balance = timespan[2]
-            klines = cursor.execute("SELECT time, close FROM public.klines WHERE (time >= %s AND time <= %s AND MOD(time, 3600000) = 0)", (starttime, endtime)).fetchall()
+            klines = cursor.execute("SELECT time, close FROM public.klines WHERE (time >= %s AND time <= %s AND MOD(time, 604800000) = 0)", (starttime, endtime)).fetchall()
             for kline in tqdm(klines, desc= 'klines between', position = 2, leave= False):
                 timestamp = kline[0]
                 price = kline[1]
