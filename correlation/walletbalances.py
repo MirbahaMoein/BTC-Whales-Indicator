@@ -19,7 +19,7 @@ def fetch_wallets(cursor):
 
 
 def generate_balance_data(wallets, timeframe, connection, cursor):
-    firstsavedtxtime = cursor.execute("SELECT time FROM public.transactions ORDER BY time ASC LIMIT 1").fetchall()[0][0]
+    firstsavedtxtime = cursor.execute("SELECT MIN(time) FROM public.transactions").fetchall()[0][0]
     firstsavedcandle = firstsavedtxtime - (firstsavedtxtime % timeframe) + timeframe
     lastklinesavedtime = cursor.execute("SELECT MAX(time) FROM public.klines").fetchall()[0][0]
     for wallet in tqdm(wallets, desc='Wallet', position=0):
