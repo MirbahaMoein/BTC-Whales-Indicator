@@ -1,5 +1,4 @@
 import requests
-import psycopg
 import bs4
 import re
 import datetime
@@ -11,37 +10,12 @@ browserheader = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"}
 
 
-def main():
-    global cursor, connection
-    connection = psycopg.connect(
-        "dbname = NURAFIN user = postgres password = NURAFIN")
-    cursor = connection.cursor()
-
-    createtables()
-    updatewallets()
-    gettxs()
-
-    connection.commit()
-    connection.close()
-
-
 def changeip():
     frequency = 2500
     duration = 200
     winsound.Beep(frequency, duration)
     print("\n")
     input("After you've changed IP adress, Press Enter to continue...")
-
-
-def createtables():
-    try:
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS wallets (url varchar(200), rank smallint, bestrank smallint, address varchar(100) PRIMARY KEY, walletname varchar(50), multisig varchar(50), balance_BTC real, topbalance_BTC real, firstin bigint, lastin bigint, firstout bigint, lastout bigint, ins integer, outs integer, updated boolean, partial boolean, balance_price_correlation real)")
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS transactions (address varchar(100), blocknumber integer, time bigint, amount_BTC real, balance_BTC real, balance_USD real, accprofit_USD real, PRIMARY KEY(address, time, balance_BTC))")
-        connection.commit()
-    except:
-        pass
 
 
 def generateurl(pagenumber: int) -> str:
@@ -53,7 +27,7 @@ def generateurl(pagenumber: int) -> str:
     return url
 
 
-def scraperows(url: str) -> list:
+def scrapewallets(url: str) -> list:
     html = requests.get(url, headers=browserheader)
     soup = bs4.BeautifulSoup(html.content, "html.parser")
     rows = soup.body.find_all("tr")[-100:]
@@ -61,10 +35,10 @@ def scraperows(url: str) -> list:
         return rows
     else:
         changeip()
-        return scraperows(url)
+        return scrapewallets(url)
 
 
-def savedata(row: bs4.BeautifulSoup) -> None:
+def savedata(row: bs4.BeautifulSoup, connection, cursor) -> None:
     rank = int(row.find_all("td")[0].text)
     wholeaddress = row.find_all("td")[1].text
     multisig = re.findall("\d+-of-\d+", wholeaddress)
@@ -145,26 +119,26 @@ def savedata(row: bs4.BeautifulSoup) -> None:
     connection.commit()
 
 
-def updatewallets():
+def updatewallets(connection, cursor):
     cursor.execute("UPDATE public.wallets SET updated = FALSE")
     for pagenumber in tqdm.tqdm(range(1, 101), desc="Updating Wallets"):
         url = generateurl(pagenumber)
-        rows = scraperows(url)
+        rows = scrapewallets(url)
         for row in rows:
-            savedata(row)
+            savedata(row, connection, cursor)
 
     if cursor.execute("SELECT COUNT(*) FROM public.wallets WHERE updated = TRUE").fetchall()[0][0] == 10000:
         cursor.execute(
             "UPDATE public.wallets SET partial = TRUE, rank = 29999 WHERE updated = FALSE")
 
 
-def walletstable() -> list:
+def walletstable(cursor) -> list:
     wallets = cursor.execute(
         "SELECT * FROM public.wallets ORDER BY rank").fetchall()
     return wallets
 
 
-def countsavedtxs(walletaddress: str) -> int:
+def countsavedtxs(walletaddress: str, cursor) -> int:
     numberofsavedtxs = cursor.execute(
         "SELECT COUNT(*) FROM public.transactions WHERE address = %s", (walletaddress,)).fetchall()[0][0]
     return numberofsavedtxs
@@ -183,8 +157,9 @@ def activedays(row: list) -> int:
     return activedays
 
 
-def eligible(row: list) -> bool:
-    if countcurrenttxs(row) / activedays(row) < 50 and countsavedtxs(row) < countcurrenttxs(row):
+def eligible(row: list, cursor) -> bool:
+    currenttxs = countcurrenttxs(row)
+    if currenttxs / activedays(row) < 50 and countsavedtxs(row, cursor) < currenttxs:
         return True
     else:
         return False
@@ -211,7 +186,7 @@ def scrapetxs(url: str) -> list:
         return scrapetxs(url)
 
 
-def savetxs(walletaddress: str, txs: list) -> None:
+def savetxs(walletaddress: str, txs: list, connection, cursor) -> None:
     for tx in txs:
         cols = tx.find_all("td")
         blocknumber = cols[0].a.text
@@ -245,14 +220,10 @@ def savetxs(walletaddress: str, txs: list) -> None:
             break
 
 
-def gettxs():
-    wallets = walletstable()
+def updatetxs(wallets, connection, cursor):
     for wallet in tqdm.tqdm(wallets, desc="Updating Transactions"):
         walletaddress = wallet[3]
-        if eligible(wallet):
+        if eligible(wallet, cursor):
             url = generatewalleturl(wallet)
             txs = scrapetxs(url)
-            savetxs(walletaddress, txs)
-
-
-main()
+            savetxs(walletaddress, txs, connection, cursor)

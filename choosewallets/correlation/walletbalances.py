@@ -1,24 +1,12 @@
 import psycopg as pg
 from tqdm import tqdm
 
-
-def init_db():
-    connection = pg.connect(
-        "dbname = NURAFIN user = postgres password = NURAFIN")
-    cursor = connection.cursor()
-    cursor.execute("DROP TABLE IF EXISTS historicalwalletbalance")
-    cursor.execute("CREATE TABLE IF NOT EXISTS historicalwalletbalance (address VARCHAR(150), starttime bigint, endtime bigint, balance_btc real, PRIMARY KEY(starttime, address))")
-    connection.commit()
-    return connection, cursor
-
-
-def fetch_wallets(cursor):
+def fetchwalletsintransactions(cursor):
     wallets = cursor.execute(
         "SELECT DISTINCT address FROM public.transactions").fetchall()
     return wallets
 
-
-def generate_balance_data(wallets, connection, cursor):
+def updatehistoricalwalletbalances(wallets, connection, cursor):
     firstsavedtxtime = cursor.execute(
         "SELECT MIN(time) FROM public.transactions").fetchall()[0][0]
     lastklinesavedtime = cursor.execute(
@@ -46,13 +34,3 @@ def generate_balance_data(wallets, connection, cursor):
             except:
                 cursor.execute("ROLLBACK")
         connection.commit()
-
-
-def main():
-    connection, cursor = init_db()
-    wallets = fetch_wallets(cursor)
-    generate_balance_data(wallets, connection, cursor)
-    connection.close()
-
-
-main()

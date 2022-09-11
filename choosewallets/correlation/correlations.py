@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pandas as pd
 
 
-def fetch_wallets(cursor):
+def fetchwalletswithbalancedata(cursor):
     return cursor.execute("SELECT DISTINCT(address) FROM public.historicalwalletbalance").fetchall()
 
 
@@ -31,7 +31,7 @@ def generate_dataframe(address, klines, cursor):
     return walletdf
 
 
-def generate_correlations(wallets, connection, cursor, timeframe):
+def updatecorrelations(wallets, connection, cursor, timeframe):
     klines = cursor.execute(
         "SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0", (timeframe,)).fetchall()
     for wallet in tqdm(wallets, desc='Wallets', position=0):
@@ -57,15 +57,5 @@ def calculate_correlation(walletdf):
     correlation = walletdf['balancetrend'].corr(walletdf['pricetrend'])
     return correlation
 
-
-def main():
-    with pg.connect("dbname = NURAFIN user = postgres password = NURAFIN") as connection:
-        cursor = connection.cursor()
-        cursor.execute(
-            "UPDATE public.wallets SET balance_price_correlation = 0")
-        connection.commit()
-        wallets = fetch_wallets(cursor)
-        generate_correlations(wallets, connection, cursor, 604800000)
-        connection.close()
 
 
