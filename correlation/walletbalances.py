@@ -18,18 +18,22 @@ def fetch_wallets(cursor):
     return wallets
 
 
-def generate_balance_data(wallets, timeframe, connection, cursor):
-    firstsavedtxtime = cursor.execute("SELECT MIN(time) FROM public.transactions").fetchall()[0][0]
-    lastklinesavedtime = cursor.execute("SELECT MAX(time) FROM public.klines").fetchall()[0][0]
+def generate_balance_data(wallets, connection, cursor):
+    firstsavedtxtime = cursor.execute(
+        "SELECT MIN(time) FROM public.transactions").fetchall()[0][0]
+    lastklinesavedtime = cursor.execute(
+        "SELECT MAX(time) FROM public.klines").fetchall()[0][0]
     for wallet in tqdm(wallets, desc='Wallet', position=0):
         address = wallet[0]
         txs = cursor.execute(
             "SELECT time, balance_btc FROM public.transactions WHERE address = %s ORDER BY time ASC", (address,)).fetchall()
         firsttxtime = txs[0][0]
-        cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, 0)", (address, firstsavedtxtime, firsttxtime-1))
+        cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, 0)",
+                       (address, firstsavedtxtime, firsttxtime-1))
         lasttxtime = txs[-1][0]
         lasttxbalance = txs[-1][1]
-        cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, %s)", (address, lasttxtime, lastklinesavedtime, lasttxbalance))
+        cursor.execute("INSERT INTO public.historicalwalletbalance VALUES (%s, %s, %s, %s)",
+                       (address, lasttxtime, lastklinesavedtime, lasttxbalance))
         for itrtr in tqdm(range(len(txs)-1), desc='Transaction', position=1, leave=False):
             tx1 = txs[itrtr]
             tx1time = tx1[0]
@@ -45,10 +49,9 @@ def generate_balance_data(wallets, timeframe, connection, cursor):
 
 
 def main():
-    timeframe = 3600000
     connection, cursor = init_db()
     wallets = fetch_wallets(cursor)
-    generate_balance_data(wallets, timeframe, connection, cursor)
+    generate_balance_data(wallets, connection, cursor)
     connection.close()
 
 
