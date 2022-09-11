@@ -196,7 +196,6 @@ def generatewalleturl(row: list) -> str:
 
 
 def scrapetxs(url: str) -> list:
-
     txs = []
     try:
         html = requests.get(url, headers=browserheader)
@@ -220,31 +219,23 @@ def savetxs(walletaddress: str, txs: list) -> None:
         time = datetime.strptime(
             time, "%Y-%m-%d %X UTC").timestamp()*1000
         btcamount = cols[2].span.text
-
         btcamount = float(re.findall(
             "^.+(?= BTC)", btcamount)[0].replace(",", ""))
-
         btcbalance = cols[3].text
-
         btcbalance = float(re.findall(
             "^.+(?= BTC)", btcbalance)[0].replace(",", ""))
-
         usdbalance = cols[4].text
-
         try:
             usdbalance = float(re.findall("^.+(?= @)", usdbalance)
                                [0].replace(",", "").replace("$", ""))
         except:
             usdbalance = 0
-
         usdprofit = cols[5].text
-
         try:
             usdprofit = float(usdprofit.replace(
                 ",", "").replace("$", ""))
         except:
             usdprofit = 0
-
         try:
             cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (
                 walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
