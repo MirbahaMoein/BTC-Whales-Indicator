@@ -1,10 +1,12 @@
 import psycopg as pg
 from tqdm import tqdm
 
+
 def fetchwalletsintransactions(cursor):
     wallets = cursor.execute(
         "SELECT DISTINCT address FROM public.transactions").fetchall()
     return wallets
+
 
 def updatehistoricalwalletbalances(wallets, connection, cursor):
     firstsavedtxtime = cursor.execute(

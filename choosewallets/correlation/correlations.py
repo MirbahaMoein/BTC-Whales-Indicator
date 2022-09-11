@@ -39,8 +39,9 @@ def updatecorrelations(wallets, connection, cursor, timeframe):
         walletdf = generate_dataframe(address, klines, cursor)
         if type(walletdf) != bool:
             walletdf = prepare_dataframe(walletdf)
+            correlation = calculate_correlation(walletdf)
             cursor.execute(
-                "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (calculate_correlation(walletdf), address))
+                "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
             connection.commit()
 
 
@@ -56,6 +57,3 @@ def prepare_dataframe(walletdf):
 def calculate_correlation(walletdf):
     correlation = walletdf['balancetrend'].corr(walletdf['pricetrend'])
     return correlation
-
-
-

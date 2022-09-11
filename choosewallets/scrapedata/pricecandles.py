@@ -16,9 +16,7 @@ def generatetimestamps(cursor) -> tuple:
             "SELECT MIN(time) FROM public.klines").fetchall()[0][0])
     except:
         firstopentimestamp = int(datetime.now().timestamp() * 1000)
-
     nowtimestamp = int(datetime.now().timestamp()*1000)
-
     return firstopentimestamp, lastopentimestamp, nowtimestamp
 
 
@@ -46,15 +44,14 @@ def get_table(client, symbol, endtimestamp, timeframe):
 def updateklines(symbol, timeframe, startingtime, connection, cursor):
     client = init_client()
     firsttimestamp, lasttimestamp, nowtimestamp = generatetimestamps(cursor)
-    timestamp = nowtimestamp
-    pbar = tqdm(desc= 'klines', total=int((nowtimestamp - startingtime + firsttimestamp -
+    pbar = tqdm(desc='klines', total=int((nowtimestamp - startingtime + firsttimestamp -
                 lasttimestamp + 2 * timeframe) / (timeframe * 1000)))
+    timestamp = nowtimestamp
     while timestamp > lasttimestamp - timeframe:
         data = get_table(client, symbol, timestamp, timeframe*1000)
         saveklines(data, connection, cursor)
         timestamp -= timeframe * 1000
         pbar.update(1)
-
     timestamp = firsttimestamp + timeframe
     while timestamp > startingtime:
         data = get_table(client, symbol, timestamp, timeframe*1000)
@@ -77,6 +74,3 @@ def saveklines(data, connection, cursor):
         except:
             cursor.execute("ROLLBACK")
         connection.commit()
-
-
-
