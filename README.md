@@ -1,5 +1,5 @@
 
-# BTC Top Wallets Indicator
+# BTC Whales Indicator
 
 This project aims to create an indicator that could predict bitcoin price movements.
 
