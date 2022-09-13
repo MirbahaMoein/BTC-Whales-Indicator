@@ -18,7 +18,7 @@ This project aims to create an indicator that could predict bitcoin price moveme
 
 ## Installation
 
-Note: This program is only working and being tested on Windows 11-x64, Python 3.10.6, so:
+Note: This program is only working and being tested on Windows 10-11 x64, Python 3.10.6-7, so:
 
 - Clone this repository on your PC
 - Install Python 3.10.6 from: https://www.python.org/ftp/python/3.10.6/python-3.10.6-amd64.exe 
