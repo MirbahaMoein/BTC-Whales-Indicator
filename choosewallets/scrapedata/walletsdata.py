@@ -186,31 +186,38 @@ def scrapetxs(url: str) -> list:
         return scrapetxs(url)
 
 
+def get_values(tx) -> tuple:
+    cols = tx.find_all("td")
+    blocknumber = cols[0].a.text
+    time = cols[1].text
+    time = datetime.strptime(
+        time, "%Y-%m-%d %X UTC").timestamp()*1000
+    btcamount = cols[2].span.text
+    btcamount = float(re.findall(
+        "^.+(?= BTC)", btcamount)[0].replace(",", ""))
+    btcbalance = cols[3].text
+    btcbalance = float(re.findall(
+        "^.+(?= BTC)", btcbalance)[0].replace(",", ""))
+    usdbalance = cols[4].text
+    try:
+        usdbalance = float(re.findall("^.+(?= @)", usdbalance)
+                           [0].replace(",", "").replace("$", ""))
+    except:
+        usdbalance = 0
+    usdprofit = cols[5].text
+    try:
+        usdprofit = float(usdprofit.replace(
+            ",", "").replace("$", ""))
+    except:
+        usdprofit = 0
+
+    return blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit
+
+
 def savetxs(walletaddress: str, txs: list, connection, cursor) -> None:
     for tx in txs:
-        cols = tx.find_all("td")
-        blocknumber = cols[0].a.text
-        time = cols[1].text
-        time = datetime.strptime(
-            time, "%Y-%m-%d %X UTC").timestamp()*1000
-        btcamount = cols[2].span.text
-        btcamount = float(re.findall(
-            "^.+(?= BTC)", btcamount)[0].replace(",", ""))
-        btcbalance = cols[3].text
-        btcbalance = float(re.findall(
-            "^.+(?= BTC)", btcbalance)[0].replace(",", ""))
-        usdbalance = cols[4].text
-        try:
-            usdbalance = float(re.findall("^.+(?= @)", usdbalance)
-                               [0].replace(",", "").replace("$", ""))
-        except:
-            usdbalance = 0
-        usdprofit = cols[5].text
-        try:
-            usdprofit = float(usdprofit.replace(
-                ",", "").replace("$", ""))
-        except:
-            usdprofit = 0
+        blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit = get_values(
+            tx)
         try:
             cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (
                 walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
@@ -222,8 +229,8 @@ def savetxs(walletaddress: str, txs: list, connection, cursor) -> None:
 
 def updatetxs(wallets, connection, cursor):
     for wallet in tqdm.tqdm(wallets, desc="Updating Transactions"):
-        walletaddress = wallet[3]
         if eligible(wallet, cursor):
             url = generatewalleturl(wallet)
             txs = scrapetxs(url)
+            walletaddress = wallet[3]
             savetxs(walletaddress, txs, connection, cursor)
