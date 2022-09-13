@@ -13,7 +13,7 @@ def generate_dataframe(address, klines, cursor):
         timestamp = kline[0]
         btcprice = kline[1]
         timespans = cursor.execute(
-            "SELECT balance_btc FROM public.historicalwalletbalance WHERE (starttime < %s AND endtime > %s AND address = %s)", (timestamp, timestamp, address)).fetchall()
+            "SELECT balance_btc FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address = %s)", (timestamp, timestamp, address)).fetchall()
         if len(timespans) > 1:
             print("kline in more than one timespan",
                   address, '\n', kline, '\n', timespans)
@@ -48,9 +48,9 @@ def updatecorrelations(wallets, connection, cursor, timeframe):
 def prepare_dataframe(walletdf):
     walletdf = walletdf.sort_values(by='time')
     walletdf['balancetrend'] = walletdf['balance'] - \
-        walletdf['balance'].rolling(4).mean()
+        walletdf['balance'].ewm(span = 7).mean()
     walletdf['pricetrend'] = walletdf['btc_price'] - \
-        walletdf['btc_price'].rolling(4).mean()
+        walletdf['btc_price'].ewm(span = 7).mean()
     return walletdf
 
 

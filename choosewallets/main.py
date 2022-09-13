@@ -21,7 +21,7 @@ def create_db(credentials, dbname):
 def main():
     symbol = 'BTCUSDT'
     pricecandletimeframems = 60000
-    correlationcalculationtimeframems = 604800000
+    correlationcalculationtimeframems = 86400000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials = "user = postgres password = NURAFIN"
     dbname = 'whales'
@@ -43,7 +43,7 @@ def main():
                      firstpricecandletime, connection, cursor)
         updatewallets(connection, cursor)
         savedwallets = walletstable(cursor)
-        updatetxs(savedwallets, connection, cursor)
+        updatetxs(savedwallets[::100], connection, cursor)
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
