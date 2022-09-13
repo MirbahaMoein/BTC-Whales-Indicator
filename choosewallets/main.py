@@ -8,7 +8,10 @@ import json
 
 
 def choosewallets(cursor):
-    wallets = cursor.execute("SELECT * FROM public.wallets")
+    wallets = cursor.execute("SELECT * FROM public.wallets").fetchall()
+    klines = cursor.execute("SELECT time, close FROM public.klines").fetchall()
+    for wallet in wallets:
+        walletdf = generate_dataframe(wallet[0], klines, cursor)
 
 
 def read_db_credentials():
@@ -42,7 +45,7 @@ def main():
                      firstpricecandletime, connection, cursor)
         updatewallets(connection, cursor)
         savedwallets = walletstable(cursor)
-        updatetxs(savedwallets[::100], connection, cursor)   #set to work with every 100 wallet
+        updatetxs(savedwallets, connection, cursor)
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
