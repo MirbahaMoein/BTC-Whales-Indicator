@@ -4,10 +4,19 @@ from scrapedata.walletsdata import walletstable, updatewallets, updatetxs
 from correlation.walletbalances import fetchwalletsintransactions, updatehistoricalwalletbalances
 from correlation.correlations import fetchwalletswithbalancedata, generate_dataframe, updatecorrelations
 from datetime import datetime
+import json
 
 
 def choosewallets(cursor):
     wallets = cursor.execute("SELECT * FROM public.wallets")
+
+
+def read_db_credentials():
+    with open("config.json") as config:
+        data = json.load(config)
+        dbname = data["dbname"]
+        credentials = data["credentials"]
+    return credentials, dbname
 
 
 def main():
@@ -15,8 +24,7 @@ def main():
     pricecandletimeframems = 60000
     correlationcalculationtimeframems = 86400000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
-    credentials = "user = postgres password = NURAFIN"
-    dbname = 'whales'
+    credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
     with pg.connect(connectioninfo) as connection:
         cursor = connection.cursor()
@@ -43,4 +51,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    print(read_db_credentials())
