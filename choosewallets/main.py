@@ -42,7 +42,7 @@ def main():
                      firstpricecandletime, connection, cursor)
         updatewallets(connection, cursor)
         savedwallets = walletstable(cursor)
-        updatetxs(savedwallets[::100], connection, cursor)
+        updatetxs(savedwallets[::100], connection, cursor)   #set to work with every 100 wallet
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
@@ -51,5 +51,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    print(read_db_credentials())
+    main()
