@@ -10,14 +10,6 @@ def choosewallets(cursor):
     wallets = cursor.execute("SELECT * FROM public.wallets")
 
 
-def create_db(credentials, dbname):
-    """with pg.connect(credentials) as connection:
-        cursor = connection.cursor()
-        cursor.execute("CREATE DATABASE {}".format(dbname))
-        connection.commit()"""
-    pass
-
-
 def main():
     symbol = 'BTCUSDT'
     pricecandletimeframems = 60000
@@ -25,7 +17,6 @@ def main():
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials = "user = postgres password = NURAFIN"
     dbname = 'whales'
-    #create_db(credentials, dbname)
     connectioninfo = "dbname = {} ".format(dbname) + credentials
     with pg.connect(connectioninfo) as connection:
         cursor = connection.cursor()
