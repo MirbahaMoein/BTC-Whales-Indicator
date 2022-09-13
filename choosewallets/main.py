@@ -15,7 +15,7 @@ def choosewallets(cursor):
 
 
 def read_db_credentials():
-    with open("config.json") as config:
+    with open("./choosewallets/config.json") as config:
         data = json.load(config)
         dbname = data["dbname"]
         credentials = data["credentials"]
