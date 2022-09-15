@@ -3,7 +3,6 @@ import bs4
 import re
 import datetime
 from datetime import *
-import winsound
 import tqdm
 
 browserheader = {
@@ -11,11 +10,21 @@ browserheader = {
 
 
 def changeip():
-    frequency = 2500
-    duration = 200
-    winsound.Beep(frequency, duration)
-    print("\n")
-    input("After you've changed IP adress, Press Enter to continue...")
+    os = 'linux'
+    if os == 'windows':
+        import winsound
+        frequency = 2500
+        duration = 200
+        winsound.Beep(frequency, duration)
+        print("\n")
+        input("After you've changed IP adress, Press Enter to continue...")
+    elif os == 'linux':
+        from toripchanger import TorIpChanger
+        frequency = 2500
+        duration = 200
+        changer = TorIpChanger(tor_password= '1029384756', tor_port= 9051, local_http_proxy= 'http://127.0.0.1:8118', new_ip_max_attempts= 10)
+        print(changer.get_new_ip())
+        time.sleep(5)
 
 
 def generateurl(pagenumber: int) -> str:
