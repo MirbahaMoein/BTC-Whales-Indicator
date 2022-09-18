@@ -25,7 +25,7 @@ def read_db_credentials():
 def main():
     symbol = 'BTCUSDT'
     pricecandletimeframems = 60000
-    correlationcalculationtimeframems = 86400000
+    correlationcalculationtimeframems = 604800000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
