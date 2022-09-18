@@ -37,7 +37,7 @@ def main():
         cursor.execute("CREATE TABLE IF NOT EXISTS transactions (address varchar(100) REFERENCES wallets (address), blocknumber integer, time bigint, amount_BTC double precision, balance_BTC double precision, balance_USD real, accprofit_USD real, PRIMARY KEY(address, time, balance_BTC))")
         cursor.execute("DROP TABLE IF EXISTS historicalwalletbalance")
         cursor.execute(
-            "CREATE TABLE IF NOT EXISTS historicalwalletbalance (address VARCHAR(150), starttime bigint, endtime bigint, balance_btc double precision, PRIMARY KEY(starttime, address))")
+            "CREATE TABLE IF NOT EXISTS historicalwalletbalance (address VARCHAR(100), starttime bigint, endtime bigint, balance_btc double precision, PRIMARY KEY(starttime, address))")
         cursor.execute(
             "UPDATE public.wallets SET balance_price_correlation = 0")
         connection.commit()
