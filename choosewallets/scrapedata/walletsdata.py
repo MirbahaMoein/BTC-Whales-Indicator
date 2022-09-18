@@ -8,17 +8,20 @@ import tqdm
 browserheader = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"}
 
+def detect_os():
+    import platform
+    return platform.system()
 
 def changeip():
-    os = 'linux'
-    if os == 'windows':
+    os = detect_os()
+    if os == 'Windows':
         import winsound
         frequency = 2500
         duration = 200
         winsound.Beep(frequency, duration)
         print("\n")
         input("After you've changed IP adress, Press Enter to continue...")
-    elif os == 'linux':
+    elif os == 'Linux':
         from toripchanger import TorIpChanger
         frequency = 2500
         duration = 200
