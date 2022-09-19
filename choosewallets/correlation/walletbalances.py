@@ -9,6 +9,10 @@ def fetchwalletsintransactions(cursor):
 
 
 def updatehistoricalwalletbalances(wallets, connection, cursor):
+    cursor.execute("DROP TABLE IF EXISTS historicalwalletbalance")
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS historicalwalletbalance (address VARCHAR(100), starttime bigint, endtime bigint, balance_btc double precision, PRIMARY KEY(starttime, address))")
+    connection.commit()
     firstsavedtxtime = cursor.execute(
         "SELECT MIN(time) FROM public.transactions").fetchall()[0][0]
     lastklinesavedtime = cursor.execute(
