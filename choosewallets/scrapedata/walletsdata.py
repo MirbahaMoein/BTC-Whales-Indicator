@@ -226,23 +226,24 @@ def get_values(tx) -> tuple:
     return blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit
 
 
-def savetxs(walletaddress: str, txs: list, connection, cursor) -> None:
+def savetxs(walletaddress: str, txs: list, connection, cursor, runtime) -> None:
     for tx in txs:
         blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit = get_values(
             tx)
-        try:
-            cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (
-                walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
-            connection.commit()
-        except:
-            cursor.execute("ROLLBACK")
-            break
+        if time < runtime:
+            try:
+                cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (
+                    walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
+                connection.commit()
+            except:
+                cursor.execute("ROLLBACK")
+                break
 
 
-def updatetxs(wallets, connection, cursor):
+def updatetxs(wallets, connection, cursor, runtime):
     for wallet in tqdm.tqdm(wallets, desc="Updating Transactions"):
         if eligible(wallet, cursor):
             url = generatewalleturl(wallet)
             txs = scrapetxs(url)
             walletaddress = wallet[3]
-            savetxs(walletaddress, txs, connection, cursor)
+            savetxs(walletaddress, txs, connection, cursor, runtime)
