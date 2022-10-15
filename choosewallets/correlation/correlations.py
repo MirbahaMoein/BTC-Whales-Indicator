@@ -50,10 +50,10 @@ def updatecorrelations(wallets, connection, cursor, timeframe):
 
 def prepare_dataframe(walletdf):
     walletdf = walletdf.sort_values(by='time')
-    walletdf['balancetrend'] = walletdf['balance'].ewm(span=3).mean() - \
-        walletdf['balance'].ewm(span=7).mean()
-    walletdf['pricetrend'] = walletdf['btc_price'].ewm(span=3).mean() - \
-        walletdf['btc_price'].ewm(span=7).mean()
+    walletdf['balancetrend'] = walletdf['balance'].ewm(span=4).mean() - \
+        walletdf['balance'].ewm(span=8).mean()
+    walletdf['pricetrend'] = walletdf['btc_price'].ewm(span=4).mean() - \
+        walletdf['btc_price'].ewm(span=8).mean()
     return walletdf
 
 
