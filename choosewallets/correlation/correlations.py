@@ -12,22 +12,22 @@ def generate_dataframe(address, klines, cursor):
     for kline in tqdm(klines, desc='Candles', position=1, leave=False):
         timestamp = kline[0]
         btcprice = kline[1]
-        timespans = cursor.execute(
+        timespan = cursor.execute(
             "SELECT balance_btc FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address = %s)", (timestamp, timestamp, address)).fetchall()
-        if len(timespans) > 1:
+        if len(timespan) > 1:
             print("kline in more than one timespan",
-                  address, '\n', kline, '\n', timespans)
+                  address, '\n', kline, '\n', timespan)
             cursor.execute(
                 "UPDATE public.wallets SET balance_price_correlation = 'NaN' WHERE address = %s", (address,))
             return False
-        elif len(timespans) == 0:
+        elif len(timespan) == 0:
             print("kline in no timespan", address, '\n', kline)
             cursor.execute(
                 "UPDATE public.wallets SET balance_price_correlation = 'NaN' WHERE address = %s", (address,))
             return False
         else:
             walletdf.loc[len(walletdf)] = {
-                'time': timestamp, 'btc_price': btcprice, 'balance': timespans[0][0]}
+                'time': timestamp, 'btc_price': btcprice, 'balance': timespan[0][0]}
     return walletdf
 
 
