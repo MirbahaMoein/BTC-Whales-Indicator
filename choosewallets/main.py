@@ -46,7 +46,7 @@ def main():
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
         updatecorrelations(walletswithbalancedata, connection,
-                           cursor, correlationcalculationtimeframems)
+                           cursor, correlationcalculationtimeframems, 7)
 
 
 if __name__ == '__main__':

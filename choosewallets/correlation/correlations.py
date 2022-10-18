@@ -31,7 +31,7 @@ def generate_dataframe(address, klines, cursor):
     return walletdf
 
 
-def updatecorrelations(wallets, connection, cursor, timeframe):
+def updatecorrelations(wallets, connection, cursor, timeframe, lag):
     cursor.execute(
         "UPDATE public.wallets SET balance_price_correlation = 0")
     connection.commit()
@@ -42,7 +42,7 @@ def updatecorrelations(wallets, connection, cursor, timeframe):
         walletdf = generate_dataframe(address, klines, cursor)
         if type(walletdf) != bool:
             walletdf = prepare_dataframe(walletdf)
-            correlation = calculate_correlation(walletdf)
+            correlation = calculate_correlation(walletdf, lag)
             cursor.execute(
                 "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
             connection.commit()
@@ -57,6 +57,17 @@ def prepare_dataframe(walletdf):
     return walletdf
 
 
-def calculate_correlation(walletdf):
+def calculate_correlation(walletdf, lag):
+    walletdf = lag_behind(walletdf, lag)
     correlation = walletdf['balancetrend'].corr(walletdf['pricetrend'])
     return correlation
+
+
+def lag_behind(df: pd.DataFrame, lag: int) -> pd.DataFrame:
+    df = df.sort_values(by= 'time')
+    df = df.reset_index(drop= True)
+    newdf = pd.DataFrame(columns=['pricetrend', 'balancetrend'])
+    for index in range(len(df) - lag):
+        new_row = pd.Series({'pricetrend': df['pricetrend'][index + lag], 'balancetrend': df['balancetrend'][index]})
+        newdf = pd.concat([newdf, new_row.to_frame().T], ignore_index=True)
+    return newdf
