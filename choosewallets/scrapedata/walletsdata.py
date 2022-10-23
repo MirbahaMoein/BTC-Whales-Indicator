@@ -226,18 +226,16 @@ def get_values(tx) -> tuple:
     return blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit
 
 
-def savetxs(walletaddress: str, txs: list, connection, cursor, runtime) -> None:
-    for tx in txs:
-        blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit = get_values(
-            tx)
-        if time < runtime:
-            try:
-                cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (
-                    walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
-                connection.commit()
-            except:
-                cursor.execute("ROLLBACK")
-                break
+def savetxs(walletaddress: str, blocknumber, txtime, btcamount, btcbalance, usdbalance, usdprofit, txs: list, connection, cursor, runtime) -> bool:
+    if txtime < runtime:
+        try:
+            cursor.execute("INSERT INTO public.transactions VALUES (%s,%s,%s,%s,%s,%s,%s)", (walletaddress, blocknumber, time, btcamount, btcbalance, usdbalance, usdprofit))
+            connection.commit()
+            return True
+        except:
+            cursor.execute("ROLLBACK")
+            return False
+
 
 
 def updatetxs(wallets, connection, cursor, runtime):
@@ -245,5 +243,9 @@ def updatetxs(wallets, connection, cursor, runtime):
         if eligible(wallet, cursor):
             url = generatewalleturl(wallet)
             txs = scrapetxs(url)
-            walletaddress = wallet[3]
-            savetxs(walletaddress, txs, connection, cursor, runtime)
+            for tx in txs:
+                blocknumber, txtime, btcamount, btcbalance, usdbalance, usdprofit = get_values(tx)
+                walletaddress = wallet[3]
+                savetxs(walletaddress, blocknumber, txtime, btcamount, btcbalance, usdbalance, usdprofit, txs, connection, cursor, runtime)
+
+
