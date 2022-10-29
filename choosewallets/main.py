@@ -48,6 +48,23 @@ def main():
         updatecorrelations(walletswithbalancedata, connection,
                            cursor, correlationcalculationtimeframems, 7)
 
+def update_chart():
+    runtime = int(datetime.now().timestamp()*1000)
+    symbol = 'BTCUSDT'
+    pricecandletimeframems = 60000
+    correlationcalculationtimeframems = 604800000
+    firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
+    credentials, dbname = read_db_credentials()
+    connectioninfo = "dbname = {} ".format(dbname) + credentials
+    with pg.connect(connectioninfo) as connection:
+        cursor = connection.cursor()
+        updateklines(symbol, pricecandletimeframems, firstpricecandletime, connection, cursor)
+        updatewallets(connection, cursor)
+        wallets = cursor.execute("SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN'").fetchall()
+        updatetxs(wallets, connection, cursor, runtime)
+        updatehistoricalwalletbalances(wallets, connection, cursor)
+        import chart
 
 if __name__ == '__main__':
     main()
+    #update_chart()
