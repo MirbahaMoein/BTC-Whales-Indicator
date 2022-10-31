@@ -4,3 +4,4 @@ choosewallets/__pycache__/
 choosewallets/config.json
 .vscode/
 .pytest_cache/
+data.csv
