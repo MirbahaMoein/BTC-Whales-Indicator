@@ -4,6 +4,7 @@ from scrapedata.walletsdata import walletstable, updatewallets, updatetxs
 from correlation.walletbalances import fetchwalletsintransactions, updatehistoricalwalletbalances
 from correlation.correlations import fetchwalletswithbalancedata, generate_dataframe, updatecorrelations
 from datetime import datetime
+import chart
 import json
 
 
@@ -60,11 +61,11 @@ def update_chart():
         cursor = connection.cursor()
         updateklines(symbol, pricecandletimeframems, firstpricecandletime, connection, cursor)
         updatewallets(connection, cursor)
-        wallets = cursor.execute("SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN'").fetchall()
+        wallets = cursor.execute("SELECT * FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')").fetchall()
         updatetxs(wallets, connection, cursor, runtime)
         updatehistoricalwalletbalances(wallets, connection, cursor)
-        import chart
+        chart.generate_totalbalance_charts(24*60*60*1000)
 
 if __name__ == '__main__':
-    main()
-    #update_chart()
+    #main()
+    update_chart()

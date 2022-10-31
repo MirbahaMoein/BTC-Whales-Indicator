@@ -4,6 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+
 def generate_totalbalance_charts(timeframe: int):
     credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
@@ -18,12 +19,12 @@ def generate_totalbalance_charts(timeframe: int):
             totalbalance = cursor.execute(
                 "SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address IN (SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')))", (timestamp, timestamp)).fetchall()[0][0]
             new_row = pd.Series({'time': timestamp, 'total_balance': totalbalance, 'btc_price': btcprice})
-            df = pd.concat([df, new_row.to_frame().T], ignore_index= True)
-    
-    df['time'] = pd.to_datetime(df['time'], unit= 'ms')
-    
+            df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
+
+    df['time'] = pd.to_datetime(df['time'], unit='ms')
+
     plt.figure()
-    
+
     plt.subplot(311)
     plt.plot(df['time'], df['btc_price'])
     plt.yscale('log')
@@ -40,13 +41,11 @@ def generate_totalbalance_charts(timeframe: int):
     df['level1'] = 25000
 
     plt.subplot(313)
-    plt.plot(df['time'], df['total_balance'].ewm(span= 7).mean() - df['total_balance'].ewm(span = 28).mean())
-    plt.plot(df['time'], df['level0'], color= 'black')
-    plt.plot(df['time'], df['level1'], color= 'black')
+    plt.plot(df['time'], df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean())
+    plt.plot(df['time'], df['level0'], color='black')
+    plt.plot(df['time'], df['level1'], color='black')
     plt.yscale('linear')
     plt.title('Total Balance Trend')
     plt.grid(True)
 
     plt.show()
-
-generate_totalbalance_charts(24*60*60*1000)
