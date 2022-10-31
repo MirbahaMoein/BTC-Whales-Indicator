@@ -8,13 +8,6 @@ import chart
 import json
 
 
-def choosewallets(cursor):
-    wallets = cursor.execute("SELECT * FROM public.wallets").fetchall()
-    klines = cursor.execute("SELECT time, close FROM public.klines").fetchall()
-    for wallet in wallets:
-        walletdf = generate_dataframe(wallet[0], klines, cursor)
-
-
 def read_db_credentials():
     with open("./choosewallets/config.json") as config:
         data = json.load(config)
@@ -53,7 +46,6 @@ def update_chart():
     runtime = int(datetime.now().timestamp()*1000)
     symbol = 'BTCUSDT'
     pricecandletimeframems = 60000
-    correlationcalculationtimeframems = 604800000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
@@ -63,9 +55,10 @@ def update_chart():
         updatewallets(connection, cursor)
         wallets = cursor.execute("SELECT * FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')").fetchall()
         updatetxs(wallets, connection, cursor, runtime)
-        updatehistoricalwalletbalances(wallets, connection, cursor)
-        chart.generate_totalbalance_charts(24*60*60*1000)
+        walletswithsavedtxs = fetchwalletsintransactions(cursor)
+        updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
+        chart.generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
 
 if __name__ == '__main__':
-    #main()
+    main()
     update_chart()
