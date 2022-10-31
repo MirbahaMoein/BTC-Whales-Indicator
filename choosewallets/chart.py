@@ -37,9 +37,12 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
 
     df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
     
-    exportingdf = pd.DataFrame(columns= ['time', 'balance_trend'])
+    exportingdf = pd.DataFrame(columns= ['time', 'open', 'high', 'low', 'close'])
     exportingdf['time'] = df['time']
-    exportingdf['balance_trend'] = df['balance_trend']
+    exportingdf['open'] = df['balance_trend']
+    exportingdf['high'] = df['balance_trend']
+    exportingdf['low'] = df['balance_trend']
+    exportingdf['close'] = df['balance_trend']
     exportingdf.to_csv('data.csv', index= False)
 
     plt.subplot(313)
