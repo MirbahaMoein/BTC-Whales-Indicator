@@ -17,6 +17,18 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
         df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
 
     df['time'] = pd.to_datetime(df['time'], unit='ms')
+    
+    df['level0'] = 0
+    df['level1'] = 25000
+    df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
+    exportingdf = pd.DataFrame(columns= ['date', 'time', 'open', 'high', 'low', 'close', ])
+    exportingdf['date'] = df['time']
+    exportingdf['time'] = ['00:00:00'] * len(df)
+    exportingdf['open'] = df['balance_trend']
+    exportingdf['high'] = df['balance_trend']
+    exportingdf['low'] = df['balance_trend']
+    exportingdf['close'] = df['balance_trend']
+    exportingdf.to_csv('data.csv', index= False)
 
     plt.figure()
 
@@ -32,20 +44,6 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
     plt.title('Total Balance')
     plt.grid(True)
 
-    df['level0'] = 0
-    df['level1'] = 25000
-
-    df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
-    
-    exportingdf = pd.DataFrame(columns= ['date', 'time', 'open', 'high', 'low', 'close', ])
-    exportingdf['date'] = df['time']
-    exportingdf['time'] = ['00:00:00'] * len(df)
-    exportingdf['open'] = df['balance_trend']
-    exportingdf['high'] = df['balance_trend']
-    exportingdf['low'] = df['balance_trend']
-    exportingdf['close'] = df['balance_trend']
-    exportingdf.to_csv('data.csv', index= False)
-
     plt.subplot(313)
     plt.plot(df['time'], df['balance_trend'])
     plt.plot(df['time'], df['level0'], color='black')
@@ -57,6 +55,6 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
     plt.show()
 
 
-with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
-    cursor = connection.cursor()
-    generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
+#with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
+#    cursor = connection.cursor()
+#    generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
