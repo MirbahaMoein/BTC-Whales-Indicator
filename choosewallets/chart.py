@@ -37,8 +37,9 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
 
     df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
     
-    exportingdf = pd.DataFrame(columns= ['time', 'open', 'high', 'low', 'close'])
-    exportingdf['time'] = df['time']
+    exportingdf = pd.DataFrame(columns= ['date', 'time', 'open', 'high', 'low', 'close', ])
+    exportingdf['date'] = df['time']
+    exportingdf['time'] = ['00:00:00'] * len(df)
     exportingdf['open'] = df['balance_trend']
     exportingdf['high'] = df['balance_trend']
     exportingdf['low'] = df['balance_trend']
@@ -56,6 +57,6 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
     plt.show()
 
 
-#with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
-#    cursor = connection.cursor()
-#    generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
+with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
+    cursor = connection.cursor()
+    generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
