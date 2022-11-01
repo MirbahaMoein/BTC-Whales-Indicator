@@ -5,3 +5,4 @@ choosewallets/config.json
 .vscode/
 .pytest_cache/
 data.csv
+data.ftr
