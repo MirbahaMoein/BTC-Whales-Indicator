@@ -9,3 +9,4 @@ scikit-learn
 numpy
 binance-connector
 toripchanger
+pyarrow
