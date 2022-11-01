@@ -4,23 +4,27 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-def generate_totalbalance_charts(connection, cursor, timeframe: int):
-    klines = cursor.execute(
-        "SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0 ORDER BY time ASC", (timeframe,)).fetchall()
+def generate_df(cursor, timeframe):
+    klines = cursor.execute("SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0 ORDER BY time ASC", (timeframe,)).fetchall()
     df = pd.DataFrame(columns=['time', 'total_balance', 'btc_price'])
     for kline in tqdm(klines):
         timestamp = kline[0]
         btcprice = kline[1]
-        totalbalance = cursor.execute(
-            "SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address IN (SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')))", (timestamp, timestamp)).fetchall()[0][0]
+        totalbalance = cursor.execute("SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address IN (SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')))", (timestamp, timestamp)).fetchall()[0][0]
         new_row = pd.Series({'time': timestamp, 'total_balance': totalbalance, 'btc_price': btcprice})
         df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
-
     df['time'] = pd.to_datetime(df['time'], unit='ms')
-    
     df['level0'] = 0
     df['level1'] = 25000
     df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
+    return df
+
+
+def save_df(df):
+    df.to_feather("./data.ftr")
+
+
+def export_to_mt5(df):
     exportingdf = pd.DataFrame(columns= ['date', 'time', 'open', 'high', 'low', 'close', ])
     exportingdf['date'] = df['time']
     exportingdf['time'] = ['00:00:00'] * len(df)
@@ -29,6 +33,12 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
     exportingdf['low'] = df['balance_trend']
     exportingdf['close'] = df['balance_trend']
     exportingdf.to_csv('data.csv', index= False)
+
+
+def generate_charts(cursor, timeframe: int):
+    
+    df = generate_df(cursor, timeframe)
+    save_df(df)
 
     plt.figure()
 
@@ -53,8 +63,3 @@ def generate_totalbalance_charts(connection, cursor, timeframe: int):
     plt.grid(True)
 
     plt.show()
-
-
-#with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
-#    cursor = connection.cursor()
-#    generate_totalbalance_charts(connection, cursor, 24*60*60*1000)
