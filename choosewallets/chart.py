@@ -20,7 +20,7 @@ def generate_df(cursor, timeframe):
     return df
 
 
-def save_df(df):
+def save_feather(df):
     df.to_feather("./data.ftr")
 
 
@@ -38,7 +38,7 @@ def export_to_mt5(df):
 def generate_charts(cursor, timeframe: int):
     
     df = generate_df(cursor, timeframe)
-    save_df(df)
+    save_feather(df)
 
     plt.figure()
 
