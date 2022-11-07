@@ -14,14 +14,15 @@ def generate_df(cursor, timeframe):
         new_row = pd.Series({'time': timestamp, 'total_balance': totalbalance, 'btc_price': btcprice})
         df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
     df['time'] = pd.to_datetime(df['time'], unit='ms')
-    df['level0'] = 0
-    df['level1'] = 25000
     df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
     return df
 
 
-def save_feather(df):
-    df.to_feather("./data.ftr")
+def save_feather(df, corrmethod, corrtimeframe, charttimeframe, lag):
+    corrtf = str(corrtimeframe / 1000 * 60) + 'mins'
+    chtf = str(charttimeframe / 1000 * 60) + 'mins'
+    df = df.drop(['btc_price'], axis=1)
+    df.to_feather("./data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + ".ftr")
 
 
 def export_to_mt5(df):
@@ -35,10 +36,10 @@ def export_to_mt5(df):
     exportingdf.to_csv('data.csv', index= False)
 
 
-def generate_charts(cursor, timeframe: int):
+def generate_charts(df):
     
-    df = generate_df(cursor, timeframe)
-    save_feather(df)
+    df['level0'] = 0
+    df['level1'] = 25000
 
     plt.figure()
 
@@ -57,7 +58,7 @@ def generate_charts(cursor, timeframe: int):
     plt.subplot(313)
     plt.plot(df['time'], df['balance_trend'])
     plt.plot(df['time'], df['level0'], color='black')
-    plt.plot(df['time'], df['level1'], color='black')
+    #plt.plot(df['time'], df['level1'], color='black')
     plt.yscale('linear')
     plt.title('Total Balance Trend')
     plt.grid(True)

@@ -1,5 +1,5 @@
 import psycopg as pg
-from chart import generate_charts
+from showchart import generate_charts, save_feather, generate_df
 from scrapedata.pricecandles import updateklines
 from scrapedata.walletsdata import walletstable, updatewallets, updatetxs
 from correlation.walletbalances import fetchwalletsintransactions, updatehistoricalwalletbalances
@@ -9,7 +9,7 @@ import json
 
 
 def read_db_credentials():
-    with open("./choosewallets/config.json") as config:
+    with open("./indicatorgen/config.json") as config:
         data = json.load(config)
         dbname = data["dbname"]
         credentials = data["credentials"]
@@ -19,7 +19,10 @@ def read_db_credentials():
 def main():
     runtime = int(datetime.now().timestamp()*1000)
     symbol = 'BTCUSDT'
+    charttimeframe = 24 * 60 * 60 * 1000
     pricecandletimeframems = 60000
+    corrmethod = 'pearson'
+    lagbehind = 7
     correlationcalculationtimeframems = 604800000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials, dbname = read_db_credentials()
@@ -38,8 +41,10 @@ def main():
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        updatecorrelations(walletswithbalancedata, connection, cursor, correlationcalculationtimeframems, 7)
-        generate_charts(cursor, 24 * 60 * 60 * 1000)
+        updatecorrelations(walletswithbalancedata, connection, cursor, corrmethod, correlationcalculationtimeframems, lagbehind)
+        df = generate_df(cursor, charttimeframe)
+        generate_charts(df)
+        save_feather(df, corrmethod, correlationcalculationtimeframems, charttimeframe, lagbehind)
 
 
 if __name__ == '__main__':
