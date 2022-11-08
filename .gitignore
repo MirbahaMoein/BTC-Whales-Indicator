@@ -2,6 +2,7 @@ indicatorgen/correlation/__pycache__/
 indicatorgen/scrapedata/__pycache__/
 indicatorgen/__pycache__/
 indicatorgen/config.json
+indicatordatasets/
 .vscode/
 .pytest_cache/
 data.csv
