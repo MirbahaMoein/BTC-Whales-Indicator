@@ -19,10 +19,10 @@ def generate_df(cursor, timeframe):
 
 
 def save_feather(df, corrmethod, corrtimeframe, charttimeframe, lag):
-    corrtf = str(corrtimeframe / 1000 * 60) + 'mins'
-    chtf = str(charttimeframe / 1000 * 60) + 'mins'
+    corrtf = str(int(corrtimeframe / 1000 / 60)) + 'mins'
+    chtf = str(int(charttimeframe / 1000 / 60)) + 'mins'
     df = df.drop(['btc_price'], axis=1)
-    df.to_feather("./data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + ".ftr")
+    df.to_feather("./indicatordatasets/data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + ".ftr")
 
 
 def export_to_mt5(df):
