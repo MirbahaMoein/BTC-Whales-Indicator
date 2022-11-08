@@ -4,7 +4,7 @@ from scrapedata.pricecandles import updateklines
 from scrapedata.walletsdata import walletstable, updatewallets, updatetxs
 from correlation.walletbalances import fetchwalletsintransactions, updatehistoricalwalletbalances
 from correlation.correlations import fetchwalletswithbalancedata, generate_dataframe, updatecorrelations
-from datetime import datetime
+from datetime import *
 import json
 
 
@@ -23,7 +23,9 @@ def main():
     pricecandletimeframems = 60000
     corrmethod = 'pearson'
     lagbehind = 7
-    correlationcalculationtimeframems = 604800000
+    correlationcalculationtimeframems = 4 * 60 * 60 * 1000
+    corrcalcperiodstart = (datetime(2022, 11, 1) + timedelta(days = -7*30)).timestamp() * 1000
+    corrcalcperiodend = (datetime(2022, 11, 1) + timedelta(days = -2*30)).timestamp() * 1000
     firstpricecandletime = datetime(2018, 1, 1).timestamp()*1000
     credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
@@ -41,7 +43,7 @@ def main():
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        updatecorrelations(walletswithbalancedata, connection, cursor, correlationcalculationtimeframems, lagbehind)
+        updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend ,correlationcalculationtimeframems, lagbehind)
         df = generate_df(cursor, charttimeframe)
         generate_charts(df)
         save_feather(df, corrmethod, correlationcalculationtimeframems, charttimeframe, lagbehind)
