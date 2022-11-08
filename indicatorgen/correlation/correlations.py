@@ -31,12 +31,12 @@ def generate_dataframe(address, klines, cursor):
     return walletdf
 
 
-def updatecorrelations(wallets, connection, cursor, timeframe, lag):
+def updatecorrelations(wallets, connection, cursor, start, end, timeframe, lag):
     cursor.execute(
         "UPDATE public.wallets SET balance_price_correlation = 0")
     connection.commit()
     klines = cursor.execute(
-        "SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0", (timeframe,)).fetchall()
+        "SELECT time, close FROM public.klines WHERE (MOD(time, %s) = 0 AND time >= %s AND time <= %s)", (timeframe, start, end)).fetchall()
     for wallet in tqdm(wallets, desc='Wallets', position=0):
         address = wallet[0]
         walletdf = generate_dataframe(address, klines, cursor)
