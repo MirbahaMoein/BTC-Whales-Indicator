@@ -41,7 +41,7 @@ def main():
         walletswithsavedtxs = fetchwalletsintransactions(cursor)
         updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        updatecorrelations(walletswithbalancedata, connection, cursor, corrmethod, correlationcalculationtimeframems, lagbehind)
+        updatecorrelations(walletswithbalancedata, connection, cursor, correlationcalculationtimeframems, lagbehind)
         df = generate_df(cursor, charttimeframe)
         generate_charts(df)
         save_feather(df, corrmethod, correlationcalculationtimeframems, charttimeframe, lagbehind)
