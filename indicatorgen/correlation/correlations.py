@@ -39,14 +39,19 @@ def updatecorrelations(wallets, connection, cursor, start, end, timeframe, lag):
         "SELECT time, close FROM public.klines WHERE (MOD(time, %s) = 0 AND time >= %s AND time <= %s)", (timeframe, start, end)).fetchall()
     for wallet in tqdm(wallets, desc='Wallets', position=0):
         address = wallet[0]
-        walletdf = generate_dataframe(address, klines, cursor)
-        if type(walletdf) != bool:
-            walletdf = prepare_dataframe(walletdf)
-            correlation = calculate_correlation(walletdf, lag)
+        numberoftxs = cursor.execute("SELECT COUNT(*) FROM public.historicalwalletbalance WHERE (starttime <= %s AND starttime >= %s AND address = %s)", (end, start, address)).fetchall()[0][0]
+        if numberoftxs > 0:
+            walletdf = generate_dataframe(address, klines, cursor)
+            if type(walletdf) != bool:
+                walletdf = prepare_dataframe(walletdf)
+                correlation = calculate_correlation(walletdf, lag)
+                cursor.execute(
+                    "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
+                connection.commit()
+        else:
             cursor.execute(
-                "UPDATE public.wallets SET balance_price_correlation = %s WHERE address = %s", (correlation, address))
+                "UPDATE public.wallets SET balance_price_correlation = -1 WHERE address = %s", (address,))
             connection.commit()
-
 
 def prepare_dataframe(walletdf):
     walletdf = walletdf.sort_values(by='time')
