@@ -8,3 +8,5 @@ backtest/__pycache__/
 .pytest_cache/
 data.csv
 data.ftr
+Evaluation.xlsx
+~$Evaluation.xlsx
