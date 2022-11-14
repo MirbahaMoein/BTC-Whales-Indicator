@@ -4,25 +4,25 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-def generate_df(cursor, timeframe):
-    klines = cursor.execute("SELECT time, close FROM public.klines WHERE MOD(time, %s) = 0 ORDER BY time ASC", (timeframe,)).fetchall()
+def generate_df(cursor, timeframe, fastema, slowema, corrthreshold, start, end):
+    klines = cursor.execute("SELECT time, close FROM public.klines WHERE (MOD(time, %s) = 0 AND time >= %s AND time <= %s) ORDER BY time ASC", (timeframe, start, end)).fetchall()
     df = pd.DataFrame(columns=['time', 'total_balance', 'btc_price'])
     for kline in tqdm(klines):
         timestamp = kline[0]
         btcprice = kline[1]
-        totalbalance = cursor.execute("SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address IN (SELECT address FROM public.wallets WHERE (balance_price_correlation > 0 AND balance_price_correlation != 'NaN')))", (timestamp, timestamp)).fetchall()[0][0]
+        totalbalance = cursor.execute("SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address IN (SELECT address FROM public.wallets WHERE (balance_price_correlation > %s AND balance_price_correlation != 'NaN')))", (timestamp, timestamp, corrthreshold)).fetchall()[0][0]
         new_row = pd.Series({'time': timestamp, 'total_balance': totalbalance, 'btc_price': btcprice})
         df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
     df['time'] = pd.to_datetime(df['time'], unit='ms')
-    df['balance_trend'] = df['total_balance'].ewm(span=7).mean() - df['total_balance'].ewm(span=28).mean()
+    df['balance_trend'] = df['total_balance'].ewm(span=fastema).mean() - df['total_balance'].ewm(span=slowema).mean()
     return df
 
 
-def save_feather(df, corrmethod, corrtimeframe, charttimeframe, lag):
+def save_feather(df, corrmethod, corrtimeframe, corrthreshold, charttimeframe, lag, fastema, slowema):
     corrtf = str(int(corrtimeframe / 1000 / 60)) + 'mins'
     chtf = str(int(charttimeframe / 1000 / 60)) + 'mins'
     df = df.drop(['btc_price'], axis=1)
-    df.to_feather("./indicatordatasets/data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + ".ftr")
+    df.to_feather("./indicatordatasets/data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + "-emaspans-" + str(fastema) + "," + str(slowema) + "-corrthreshold-" + str(corrthreshold) + ".ftr")
 
 
 def export_to_mt5(df):
