@@ -19,22 +19,21 @@ def readfiles() -> dict:
     return filesread
 
 
-def backtest(signals, pricedf):
+def backtestfunc(signals, pricedf):
+    
     entries = signals["entries"]
     exits = signals["exits"]
     timeframe = int((pricedf['time'][len(pricedf)-1] - pricedf['time'][len(pricedf)- 2]).total_seconds() * 1000)
     startingbalance = 100000
     balance = startingbalance
     newdf = pd.DataFrame(columns = ['time', 'close', 'pctchange', 'position', 'systemreturn', 'balance'])
+    
     for index in range(len(pricedf)):
         time = pricedf['time'][index]
         close = pricedf['close'][index]
         pctchange = pricedf['pctchange'][index]
-        newrow = pd.Series({'time': time, 'close': close, 'pctchange':pctchange, 'position':0, 'systemreturn':0, 'balance': balance})
+        newrow = pd.Series({'time': time, 'close': close, 'pctchange': pctchange, 'position': 0, 'systemreturn': 0, 'balance': balance})
         newdf = pd.concat([newdf, newrow.to_frame().T], ignore_index= True)
-    
-    if len(entries) - len(exits) == 1:
-        exits.append(datetime.now())
     
     newdf['time'] = newdf['time'].values.astype(np.int64)/1000000
 
@@ -91,7 +90,7 @@ def generate_signals(df, lowerband, higherband, starttime, endtime):
                     exits.append((df['time'][index]))
                 entries.append((df['time'][index], -1))
     if len(entries) - len(exits) == 1:
-        exits.append(datetime.now())
+        exits.append(endtime)
     signals = {'entries': entries, 'exits': exits}
     return signals
 
@@ -117,7 +116,7 @@ def getpricedf(indicatordf):
 def main():
     files = readfiles()
     evaldf = pd.DataFrame(columns= ['filename', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades']) 
-    for filename in tqdm(list(files)[1:], position= 0):
+    for filename in tqdm(list(files), position= 0):
         df = files[filename]
         calcdf = getpricedf(df)
         maxindicatorvalue = int(df.loc[df["balance_trend"].idxmax()]["balance_trend"])
@@ -127,7 +126,7 @@ def main():
         for lowerband in tqdm(range(minindicatorvalue + stepsize, maxindicatorvalue - 2 * stepsize, stepsize), leave= False, position= 1):
             for higherband in tqdm(range(lowerband + stepsize, maxindicatorvalue - stepsize, stepsize), leave= False, position= 2):
                 signals = generate_signals(df, lowerband, higherband, datetime(2017, 8, 1), datetime(2023, 1, 1))
-                testresults = backtest(signals, calcdf)
+                testresults = backtestfunc(signals, calcdf)
                 accprofit = testresults[0]
                 sharperatio = testresults[1]
                 maxdd = testresults[2]
@@ -139,4 +138,4 @@ def main():
     evaldf.to_excel("Evaluation.xlsx")
 
 
-main()
+#main()
