@@ -4,6 +4,7 @@ indicatorgen/__pycache__/
 indicatorgen/config.json
 indicatordatasets/
 backtest/__pycache__/
+backtest/test.py
 .vscode/
 .pytest_cache/
 data.csv
