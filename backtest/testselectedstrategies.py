@@ -1,4 +1,4 @@
-from backtest import getpricedf, generate_signals, backtestfunc
+from backtest import getpricedf, generate_signals, backtestfunc, divideindicator
 from pathlib import Path
 import pandas as pd
 from datetime import datetime
@@ -14,9 +14,9 @@ for dict in selectedstrategies[:1]:
     lowerband = dict['lowerband']
     higherband = dict['higherband']
     df = pd.read_feather(str(datafolderpath) + "\\" + filename)
+    df = divideindicator(df, datetime(2022, 1, 1).timestamp()*1000, datetime(2022, 5, 1).timestamp()*1000)
     calcdf = getpricedf(df)
-    signals = generate_signals(df, lowerband, higherband, datetime(2022, 9, 1), datetime(2022, 11, 1))
-    print(signals)
+    signals = generate_signals(df, lowerband, higherband)
     testresults = backtestfunc(signals, calcdf)
     accprofit = testresults[0]
     sharperatio = testresults[1]

@@ -6,6 +6,7 @@ from correlation.walletbalances import fetchwalletsintransactions, updatehistori
 from correlation.correlations import fetchwalletswithbalancedata, generate_dataframe, updatecorrelations
 from datetime import *
 import json
+from tqdm import tqdm
 
 
 def read_db_credentials():
@@ -24,8 +25,8 @@ def main():
     corrmethod = 'pearson'
     lagbehind = 7
     correlationcalculationtimeframems = 4 * 60 * 60 * 1000
-    corrcalcperiodstart = (datetime(2022, 11, 1) + timedelta(days = -7*30)).timestamp() * 1000
-    corrcalcperiodend = (datetime(2022, 11, 1) + timedelta(days= -2*30)).timestamp() * 1000 
+    corrcalcperiodstart = (datetime(2021, 5, 1)).timestamp() * 1000
+    corrcalcperiodend = (datetime(2022, 1, 1)).timestamp() * 1000 
     firstpricecandletime = datetime(2018, 1, 1).timestamp() * 1000
     credentials, dbname = read_db_credentials()
     connectioninfo = "dbname = {} ".format(dbname) + credentials
@@ -42,15 +43,13 @@ def main():
         #updatetxs(savedwallets, connection, cursor, runtime)
         #walletswithsavedtxs = fetchwalletsintransactions(cursor)
         #updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
-        #walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        #updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend,correlationcalculationtimeframems, lagbehind)
+        walletswithbalancedata = fetchwalletswithbalancedata(cursor)
+        updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend,correlationcalculationtimeframems, lagbehind)
         maxcorrelation = cursor.execute("SELECT MAX(balance_price_correlation) FROM public.wallets WHERE balance_price_correlation != 'NaN'").fetchall()[0][0]
-        for fastema in [2, 8, 24]:
-            for slowema in [fastema * 2, fastema * 4]:
-                for corrthreshold in [0, maxcorrelation * 1/4, maxcorrelation * 1/2, maxcorrelation * 3/4]:
-                    indicatorstarttime = datetime(2022,1,1)
-                    indicatorendtime = datetime.now()
-                    df = generate_df(cursor, charttimeframe, fastema, slowema, corrthreshold, indicatorstarttime, indicatorendtime)
+        for fastema in tqdm([2, 8, 24], position= 0):
+            for slowema in tqdm([fastema * 2, fastema * 4], position = 1, leave= False):
+                for corrthreshold in tqdm([0, maxcorrelation * 1/4, maxcorrelation * 1/2, maxcorrelation * 3/4], position = 2, leave= False):
+                    df = generate_df(cursor, charttimeframe, fastema, slowema, corrthreshold, corrcalcperiodstart, corrcalcperiodend)
                     #generate_charts(df)
                     save_feather(df, corrmethod, correlationcalculationtimeframems, corrthreshold, charttimeframe, lagbehind, fastema, slowema)
 
