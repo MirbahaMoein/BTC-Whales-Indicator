@@ -59,7 +59,7 @@ def backtestfunc(signals, df):
     #df.plot(x= 'time', y= 'drawdown')
     #plt.show()
 
-    return (accumulativereturn, sharperatio, maxdrawdown)
+    return (df, accumulativereturn, sharperatio, maxdrawdown)
 
 
 def generate_signals(df, lowerband, higherband):
@@ -140,9 +140,10 @@ def main():
             for higherband in tqdm(range(lowerband + stepsize, maxindicatorvalue - stepsize, stepsize), leave= False, position= 2):
                 signals = generate_signals(df, lowerband, higherband)
                 testresults = backtestfunc(signals, calcdf)
-                accprofit = testresults[0]
-                sharperatio = testresults[1]
-                maxdd = testresults[2]
+                backtestdf = testresults[0]
+                accprofit = testresults[1]
+                sharperatio = testresults[2]
+                maxdd = testresults[3]
                 numberoftrades = len(signals['entries'])
                 newrow = pd.Series({'filename' : filename, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': sharperatio, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades})
                 evaldf = pd.concat([evaldf, newrow.to_frame().T], ignore_index= True)

@@ -18,9 +18,11 @@ for dict in selectedstrategies[:1]:
     calcdf = getpricedf(df)
     signals = generate_signals(df, lowerband, higherband)
     testresults = backtestfunc(signals, calcdf)
-    accprofit = testresults[0]
-    sharperatio = testresults[1]
-    maxdd = testresults[2]
+    backtestdf = testresults[0]
+    backtestdf.to_excel(dict['filename'] + "-dataframe.xlsx")
+    accprofit = testresults[1]
+    sharperatio = testresults[2]
+    maxdd = testresults[3]
     numberoftrades = len(signals['entries'])
     newrow = pd.Series({'filename' : filename, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': sharperatio, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades})
     evaldf = pd.concat([evaldf, newrow.to_frame().T], ignore_index= True)
