@@ -32,17 +32,16 @@ def main():
     connectioninfo = "dbname = {} ".format(dbname) + credentials
     with pg.connect(connectioninfo) as connection:
         cursor = connection.cursor()
-        #cursor.execute(
-        #    "CREATE TABLE IF NOT EXISTS klines (time bigint PRIMARY KEY, open real, high real, low real, close real, volume real)")
-        #cursor.execute("CREATE TABLE IF NOT EXISTS wallets (url varchar(200), rank smallint, bestrank smallint, address varchar(100) PRIMARY KEY, walletname varchar(50), multisig varchar(50), balance_BTC double precision, topbalance_BTC double precision, firstin bigint, lastin bigint, firstout bigint, lastout bigint, ins integer, outs integer, updated boolean, partial boolean, balance_price_correlation real)")
-        #cursor.execute("CREATE TABLE IF NOT EXISTS transactions (address varchar(100) REFERENCES wallets (address), blocknumber integer, time bigint, amount_BTC double precision, balance_BTC double precision, balance_USD real, accprofit_USD real, PRIMARY KEY(address, time, balance_BTC))")
-        #connection.commit()
-        #updateklines(symbol, pricecandletimeframems, firstpricecandletime, connection, cursor)
-        #updatewallets(connection, cursor)
-        #savedwallets = walletstable(cursor)
-        #updatetxs(savedwallets, connection, cursor, runtime)
-        #walletswithsavedtxs = fetchwalletsintransactions(cursor)
-        #updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
+        cursor.execute("CREATE TABLE IF NOT EXISTS klines (time bigint PRIMARY KEY, open real, high real, low real, close real, volume real)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS wallets (url varchar(200), rank smallint, bestrank smallint, address varchar(100) PRIMARY KEY, walletname varchar(50), multisig varchar(50), balance_BTC double precision, topbalance_BTC double precision, firstin bigint, lastin bigint, firstout bigint, lastout bigint, ins integer, outs integer, updated boolean, partial boolean, balance_price_correlation real)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS transactions (address varchar(100) REFERENCES wallets (address), blocknumber integer, time bigint, amount_BTC double precision, balance_BTC double precision, balance_USD real, accprofit_USD real, PRIMARY KEY(address, time, balance_BTC))")
+        connection.commit()
+        updateklines(symbol, pricecandletimeframems, firstpricecandletime, connection, cursor)
+        updatewallets(connection, cursor)
+        savedwallets = walletstable(cursor)
+        updatetxs(savedwallets, connection, cursor, runtime)
+        walletswithsavedtxs = fetchwalletsintransactions(cursor)
+        updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         walletswithbalancedata = fetchwalletswithbalancedata(cursor)
         updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend,correlationcalculationtimeframems, lagbehind)
         maxcorrelation = cursor.execute("SELECT MAX(balance_price_correlation) FROM public.wallets WHERE balance_price_correlation != 'NaN'").fetchall()[0][0]
