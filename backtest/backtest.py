@@ -128,7 +128,7 @@ def main():
     evaldf = pd.DataFrame(columns= ['filename', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades']) 
     periodstart = datetime(2021, 5, 1).timestamp()*1000
     periodend = datetime(2022, 1, 1).timestamp()*1000
-    for filename in tqdm(list(files)[1:], position= 0):
+    for filename in tqdm(list(files), position= 0):
         df = files[filename]
         df = divideindicator(df, periodstart, periodend)
         calcdf = getpricedf(df)
