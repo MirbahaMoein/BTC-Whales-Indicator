@@ -1,7 +1,7 @@
 
 # BTC Whales Indicator
 
-This project aims to create an indicator that could predict bitcoin price movements.
+This project aims to create an indicator that could predict bitcoin price movements and make a trading strategy using the indicator.
 
 
 ## Authors
@@ -13,8 +13,12 @@ This project aims to create an indicator that could predict bitcoin price moveme
 
 - Scrape top wallets data
 - Store data on a database
-- Analyze data and find wallets with good correlation between balance and bitcoin price on Binance (BTC/USDT)
+- Analyze data and find wallets that seem to trade and make profit
 - Visualize the price and total balance of selected wallets
+- Generate indicator timeseries using total balance
+- Make entry and exit signals using the indicator
+- Backtest strategies created using different parameters
+- Optmize the parameters for best strategy
 
 ## Installation
 
