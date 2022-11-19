@@ -41,7 +41,7 @@ def backtestfunc(signals, df):
                 df['position'][dfindex] = entrydirection
                 break
 
-    for index in range(len(df)):
+    for index in range(1, len(df)):
         df['systemreturn'][index] = df['position'][index] * df['pctchange'][index]
         df['balance'][index] = df['systemreturn'][index] * df['balance'][index - 1] + df['balance'][index - 1]
 
