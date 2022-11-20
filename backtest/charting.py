@@ -47,13 +47,11 @@ for filename in list(files):
     plt.plot(df['time'], df['close'], color= 'gray')
     plt.scatter(x= longsignals['x'], y= longsignals['y'], s= 50, marker= '^', c= 'g')
     plt.scatter(x= shortsignals['x'], y= shortsignals['y'], s= 50, marker= 'v', c= 'r')
-    #plt.yscale('log')
     plt.title('Price')
     plt.grid(True)
 
     plt.subplot(212)
     plt.plot(df['time'], df['balance'], color= 'gray')
-    #plt.yscale('log')
     plt.title('Portfolio balance')
     plt.grid(True)
 
