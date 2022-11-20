@@ -43,7 +43,7 @@ def backtestfunc(signals, df):
 
     for index in range(1, len(df)):
         df['systemreturn'][index] = df['position'][index] * df['pctchange'][index]
-        df['balance'][index] = df['systemreturn'][index] * df['balance'][index - 1] + df['balance'][index - 1]
+        df['balance'][index] = (df['systemreturn'][index] + 1) * df['balance'][index - 1] 
 
     if len(entries) == 0:
         sharperatio = 0
@@ -120,6 +120,7 @@ def divideindicator(df, start, end):
     for index in range(len(df)):
         if df['time'][index] < start or df['time'][index] > end:
             df.drop(index, inplace=True)
+    df = df.sort_values(by= 'time', ignore_index= True)
     return df
 
 
@@ -152,4 +153,4 @@ def main():
     evaldf.to_excel("Evaluation.xlsx")
 
 
-main()
+#main()
