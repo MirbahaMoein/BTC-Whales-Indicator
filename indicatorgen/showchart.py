@@ -23,7 +23,7 @@ def save_feather(df, corrmethod, corrtimeframe, corrthreshold, charttimeframe, l
     chtf = str(int(charttimeframe / 1000 / 60)) + 'mins'
     df = df.drop(['btc_price'], axis=1)
     df = df.sort_values(by= 'time', ignore_index=True)
-    df.to_feather("./indicatordatasets/data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + "-emaspans-" + str(fastema) + "," + str(slowema) + "-corrthreshold-" + str(corrthreshold) + ".ftr")
+    df.to_feather("./indicatordatasets/data-" + corrmethod + "-corrtf-" + corrtf + "-chtf-" + chtf + "-emaspans-" + str(fastema) + "," + str(slowema) + "-corrthreshold-" + str(corrthreshold) + '-' + str(lag) + ".ftr")
 
 
 def export_to_mt5(df):
