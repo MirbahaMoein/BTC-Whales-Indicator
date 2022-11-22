@@ -23,7 +23,7 @@ def main():
     charttimeframe = 4 * 60 * 60 * 1000
     pricecandletimeframems = 60000
     corrmethod = 'pearson'
-    lagbehind = 7
+    lagbehind = 2
     correlationcalculationtimeframems = 4 * 60 * 60 * 1000
     corrcalcperiodstart = (datetime(2021, 5, 1)).timestamp() * 1000
     corrcalcperiodend = (datetime(2022, 1, 1)).timestamp() * 1000 
@@ -43,12 +43,13 @@ def main():
         #walletswithsavedtxs = fetchwalletsintransactions(cursor)
         #updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         #walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        #updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend,correlationcalculationtimeframems, lagbehind)
+        walletswithbalancedata = cursor.execute("SELECT address FROM public.wallets WHERE (lastin != firstin AND CAST(ins as real) / (lastin - firstin) > 0.000000016)").fetchall()
+        updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend, correlationcalculationtimeframems, lagbehind)
         maxcorrelation = cursor.execute("SELECT MAX(balance_price_correlation) FROM public.wallets WHERE balance_price_correlation != 'NaN'").fetchall()[0][0]
         for fastema in tqdm([2, 8, 24], position= 0):
             for slowema in tqdm([fastema * 2, fastema * 4], position = 1, leave= False):
                 for corrthreshold in tqdm([0, maxcorrelation * 1/4, maxcorrelation * 1/2, maxcorrelation * 3/4], position = 2, leave= False):
-                    df = generate_df(cursor, charttimeframe, fastema, slowema, corrthreshold, (datetime(2021, 12, 15)).timestamp() * 1000, (datetime(2022, 5, 1)).timestamp() * 1000)
+                    df = generate_df(cursor, charttimeframe, fastema, slowema, corrthreshold, (datetime(2021, 5, 1)).timestamp() * 1000, (datetime(2022, 1, 1)).timestamp() * 1000)
                     #generate_charts(df)
                     save_feather(df, corrmethod, correlationcalculationtimeframems, corrthreshold, charttimeframe, lagbehind, fastema, slowema)
 
