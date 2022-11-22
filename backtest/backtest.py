@@ -51,6 +51,7 @@ def backtestfunc(signals, df):
         sharperatio = df['systemreturn'].mean() / df['systemreturn'].std()
 
     accumulativereturn = ((df['balance'][len(df) - 1] / startingbalance) - 1) * 100
+
     df['highvalue'] = df['balance'].cummax()
     df['drawdown'] = 1 - (df['balance'] / df['highvalue'])
     maxdrawdown = df['drawdown'].max() * 100
@@ -136,7 +137,9 @@ def main():
         maxindicatorvalue = int(df.loc[df["balance_trend"].idxmax()]["balance_trend"])
         minindicatorvalue = int(df.loc[df["balance_trend"].idxmin()]["balance_trend"])
         numberofsteps = 20
-        stepsize = int((maxindicatorvalue - minindicatorvalue) / numberofsteps)
+        stepsize = ((maxindicatorvalue - minindicatorvalue) / numberofsteps)
+        if stepsize == 0:
+            continue
         for lowerband in tqdm(range(minindicatorvalue + stepsize, maxindicatorvalue - 2 * stepsize, stepsize), leave= False, position= 1):
             for higherband in tqdm(range(lowerband + stepsize, maxindicatorvalue - stepsize, stepsize), leave= False, position= 2):
                 signals = generate_signals(df, lowerband, higherband)
@@ -153,4 +156,4 @@ def main():
     evaldf.to_excel("Evaluation.xlsx")
 
 
-#main()
+main()
