@@ -4,6 +4,7 @@ from scrapedata.pricecandles import updateklines
 from scrapedata.walletsdata import walletstable, updatewallets, updatetxs
 from correlation.walletbalances import fetchwalletsintransactions, updatehistoricalwalletbalances
 from correlation.correlations import fetchwalletswithbalancedata, generate_dataframe, updatecorrelations
+from correlation.correlations import generate_wallet_timeseries
 from datetime import *
 import json
 from tqdm import tqdm
@@ -21,6 +22,8 @@ def main():
     runtime = int(datetime.now().timestamp()*1000)
     symbol = 'BTCUSDT'
     charttimeframe = 4 * 60 * 60 * 1000
+    walletbalancetimeframe = 4 * 60 * 60 * 1000
+    walletbalanceperiodstart = datetime(2018,1,1).timestamp()*1000
     pricecandletimeframems = 60000
     corrmethod = 'pearson'
     lagbehind = 2
@@ -43,8 +46,9 @@ def main():
         #walletswithsavedtxs = fetchwalletsintransactions(cursor)
         #updatehistoricalwalletbalances(walletswithsavedtxs, connection, cursor)
         #walletswithbalancedata = fetchwalletswithbalancedata(cursor)
-        walletswithbalancedata = cursor.execute("SELECT address FROM public.wallets WHERE (lastin != firstin AND CAST(ins as real) / (lastin - firstin) > 0.000000016)").fetchall()
-        updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend, correlationcalculationtimeframems, lagbehind)
+        #generate_wallet_timeseries(connection, cursor, walletswithbalancedata, walletbalancetimeframe, walletbalanceperiodstart)
+        ##walletswithbalancedata = cursor.execute("SELECT address FROM public.wallets WHERE (lastin != firstin AND CAST(ins as real) / (lastin - firstin) > 0.000000016)").fetchall()
+        #updatecorrelations(walletswithbalancedata, connection, cursor, corrcalcperiodstart, corrcalcperiodend, correlationcalculationtimeframems, lagbehind)
         maxcorrelation = cursor.execute("SELECT MAX(balance_price_correlation) FROM public.wallets WHERE balance_price_correlation != 'NaN'").fetchall()[0][0]
         for fastema in tqdm([2, 8, 24], position= 0):
             for slowema in tqdm([fastema * 2, fastema * 4], position = 1, leave= False):

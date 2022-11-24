@@ -76,3 +76,33 @@ def lag_behind(df: pd.DataFrame, lag: int) -> pd.DataFrame:
         new_row = pd.Series({'pricetrend': df['pricetrend'][index + lag], 'balancetrend': df['balancetrend'][index]})
         newdf = pd.concat([newdf, new_row.to_frame().T], ignore_index=True)
     return newdf
+
+
+def generate_wallet_timeseries(connection, cursor, wallets, timeframe, periodstart):
+    cursor.execute("CREATE TABLE IF NOT EXISTS walletbalancetimeseries (address varchar(100), time bigint, balance_btc double precision, PRIMARY KEY(address, time))")
+    for wallettuple in tqdm(wallets, desc= 'wallet', position= 0, leave= True):
+        walletaddress = wallettuple[0]
+        periods = cursor.execute("SELECT * FROM public.historicalwalletbalance WHERE address = %s ORDER BY starttime ASC", (walletaddress,)).fetchall()
+        for periodtuple in tqdm(periods, desc= 'period', position= 1, leave= False):
+            starttime = periodtuple[1]
+            endtime = periodtuple[2]
+            balance = periodtuple[3]
+            if starttime % timeframe == 0:
+                firstcandletime = starttime
+            else:
+                firstcandletime = starttime - (starttime % timeframe) + timeframe
+
+            lastcandletime = endtime - (endtime % timeframe)
+
+            if len(cursor.execute("SELECT * FROM public.walletbalancetimeseries WHERE (address = %s AND time = %s)", (walletaddress, lastcandletime)).fetchall()) == 1:
+                continue
+
+            candletimes = range(firstcandletime, lastcandletime +1, timeframe)
+
+            for candletime in tqdm(candletimes, desc= 'candles', position = 2, leave= False):
+                if candletime > periodstart:
+                    try:
+                        cursor.execute("INSERT INTO public.walletbalancetimeseries VALUES (%s, %s, %s)", (walletaddress, candletime, balance))
+                        connection.commit()
+                    except: 
+                        connection.rollback()
