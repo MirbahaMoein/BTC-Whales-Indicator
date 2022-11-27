@@ -1,6 +1,7 @@
 import psycopg as pg
 from tqdm import tqdm
 import pandas as pd
+import numpy as np
 
 
 def fetchwalletswithbalancedata(cursor):
@@ -52,6 +53,32 @@ def updatecorrelations(wallets, connection, cursor, start, end, timeframe, lag):
             cursor.execute(
                 "UPDATE public.wallets SET balance_price_correlation = -1 WHERE address = %s", (address,))
             connection.commit()
+
+
+def update_correlations(wallets, connection, cursor, start, end, timeframems, speriod, lperiod, lag):
+    cursor.execute("UPDATE public.wallets SET balance_price_correlation = 0")
+    cursor.execute("CREATE TABLE IF NOT EXISTS correlations (address varchar(100), speriod smallint, lperiod smallint, lag smallint, timeframems bigint, periodstart bigint, periodend bigint, correlation real, PRIMARY KEY(address, speriod, lperiod, lag, timeframems, periodstart, periodend))")
+    connection.commit()
+    klines = cursor.execute("SELECT time, close FROM public.klines WHERE (MOD(time, %s) = 0 AND time >= %s AND time <= %s) ORDER BY time ASC", (timeframems, start, end)).fetchall()
+    klinesdf = pd.DataFrame(klines, columns= ['time', 'close'])
+    for wallet in wallets:
+        address = wallet[0]
+        balancetimeseries = cursor.execute("SELECT time, balance_btc FROM public.walletbalancetimeseries WHERE (address = %s AND time > %s AND time <= %s AND MOD(time, %s) = 0) ORDER BY time ASC", (address, start, end, timeframems)).fetchall()
+        balancedf = pd.DataFrame(balancetimeseries, columns= ['time', 'balance'])
+        calcdf = klinesdf.join(balancedf.set_index("time"), on= 'time')
+        calcdf = calcdf.sort_values(by= 'time')
+        calcdf['balancetrend'] = calcdf['balance'].ewm(span= speriod).mean() - calcdf['balance'].ewm(span= lperiod).mean()
+        calcdf['pricetrend'] = calcdf['close'].ewm(span= speriod).mean() - calcdf['close'].ewm(span= lperiod).mean()
+        calcdf['pricetrend'] = calcdf.pricetrend.shift(-lag)
+        correlation = calcdf['balancetrend'].corr(calcdf['pricetrend'])
+        if correlation == np.nan:
+            continue
+        try:
+            cursor.execute("INSERT INTO public.correlations VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (address, speriod, lperiod, lag, timeframems, start, end, correlation))
+        except:
+            connection.rollback()
+        connection.commit()
+
 
 def prepare_dataframe(walletdf):
     walletdf = walletdf.sort_values(by='time')
