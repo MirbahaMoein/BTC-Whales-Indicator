@@ -63,7 +63,7 @@ def update_correlations(wallets, connection, cursor, start, end, timeframems, sp
     klinesdf = pd.DataFrame(klines, columns= ['time', 'close'])
     for wallet in wallets:
         address = wallet[0]
-        balancetimeseries = cursor.execute("SELECT time, balance_btc FROM public.walletbalancetimeseries WHERE (address = %s AND time > %s AND time <= %s AND MOD(time, %s) = 0) ORDER BY time ASC", (address, start, end, timeframems)).fetchall()
+        balancetimeseries = cursor.execute("SELECT time, balance_btc FROM public.walletbalancetimeseries WHERE (address = %s AND time >= %s AND time <= %s AND MOD(time, %s) = 0) ORDER BY time ASC", (address, start, end, timeframems)).fetchall()
         balancedf = pd.DataFrame(balancetimeseries, columns= ['time', 'balance'])
         calcdf = klinesdf.join(balancedf.set_index("time"), on= 'time')
         calcdf = calcdf.sort_values(by= 'time')
