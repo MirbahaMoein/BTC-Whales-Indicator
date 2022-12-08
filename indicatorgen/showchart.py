@@ -4,7 +4,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-def generate_df(cursor, timeframe, fastema, slowema, corrthreshold, start, end):
+def generate_df(cursor, timeframe: int, fastema: int, slowema: int, corrthreshold: float, start: int, end: int):
     klines = cursor.execute("SELECT time, close FROM public.klines WHERE (MOD(time, %s) = 0 AND time >= %s AND time <= %s) ORDER BY time ASC", (timeframe, start, end)).fetchall()
     df = pd.DataFrame(columns=['time', 'total_balance', 'btc_price'])
     for kline in tqdm(klines):
