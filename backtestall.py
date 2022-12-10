@@ -126,9 +126,8 @@ def backtestfunc(signals, df):
 
 
 def save_feather(df, correlationcalculationtimeframems, periodstart, periodend, lperiod, speriod, lag, slowema, fastema, corrthreshold):
-    df = df.drop(['btc_price'], axis=1)
     df = df.sort_values(by= 'time', ignore_index=True)
-    df.to_feather("./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(periodend) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
+    df.to_feather("./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(int(periodend)) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
 
 
 with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
@@ -136,7 +135,7 @@ with pg.connect("dbname = whales user = postgres password = NURAFIN") as connect
     firstperiodstart = int(datetime(2018,1,1).timestamp()*1000)
     lastperiodstart = int(datetime(2020,1,1).timestamp()*1000)
     stepofperiodstart = int(timedelta(days= 365).total_seconds()*1000)
-    evaldf = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades', 'backtestdf']) 
+    evaldf = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades']) 
     for correlationcalculationtimeframems in tqdm([4 * 60 * 60 * 1000, 24 * 60 * 60 * 1000], position= 0, leave= False, desc= 'timeframe'): 
         for periodstart in tqdm(range(firstperiodstart, lastperiodstart + 1, stepofperiodstart) , position = 1, leave = False, desc= 'period'):
             periodend = periodstart + int(timedelta(days= 2 * 365).total_seconds()*1000)
@@ -145,7 +144,7 @@ with pg.connect("dbname = whales user = postgres password = NURAFIN") as connect
                     for lag in tqdm(range(0, 31, 3), position= 4, leave= False, desc= 'lag'):
                         for slowema in range(2, 31, 3):
                             for fastema in range(1, int(lperiod / 2) + 1, 2):
-                                maxcorr = cursor.execute("SELECT MAX(correlation) FROM public.correlations WHERE (speriod = %s AND lperiod = %s AND lag = %s AND timeframems = %s AND periodstart = %s)", (speriod, lperiod, lag, correlationcalculationtimeframems, periodstart)).fetchall()[0][0]
+                                maxcorr = cursor.execute("SELECT MAX(correlation) FROM public.correlations WHERE (speriod = %s AND lperiod = %s AND lag = %s AND timeframems = %s AND periodstart = %s AND correlation != 'NaN')", (speriod, lperiod, lag, correlationcalculationtimeframems, periodstart)).fetchall()[0][0]
                                 for corrthreshold in [0, maxcorr * 1/4, maxcorr * 2/4, maxcorr * 3/4]:    
                                     df = generate_df(cursor, correlationcalculationtimeframems, fastema, slowema, corrthreshold, periodstart, periodend + timedelta(days = 365).total_seconds()*1000, speriod, lperiod, lag)
                                     save_feather(df, correlationcalculationtimeframems, periodstart, periodend + timedelta(days = 365).total_seconds()*1000, lperiod, speriod, lag, slowema, fastema, corrthreshold)
@@ -166,70 +165,92 @@ with pg.connect("dbname = whales user = postgres password = NURAFIN") as connect
                                                 yearlysharpe = (31536000000 / correlationcalculationtimeframems) ** (1/2) * sharperatio 
                                                 maxdd = results[3]
                                                 numberoftrades = len(signals['entries'])
-                                                newrow = pd.Series({'timeframe' : correlationcalculationtimeframems, 'corrcalcperiodstart': periodstart, 'corrcalclperiod': lperiod, 'corrcalcsperiod': speriod, 'corrcalclag': lag, 'corrthreshold': corrthreshold, 'ilperiod': slowema, 'isperiod': fastema, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': yearlysharpe, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades, 'backtestdf': backtestdf})
+                                                newrow = pd.Series({'timeframe' : correlationcalculationtimeframems, 'corrcalcperiodstart': periodstart, 'corrcalclperiod': lperiod, 'corrcalcsperiod': speriod, 'corrcalclag': lag, 'corrthreshold': corrthreshold, 'ilperiod': slowema, 'isperiod': fastema, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': yearlysharpe, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades})
                                                 evaldf = pd.concat([evaldf, newrow.to_frame().T], ignore_index= True)
                                     except:
                                         pass
-
-byprofit = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades', 'backtestdf'])
-bysharpe = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades', 'backtestdf'])
-bymdd = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades', 'backtestdf'])
-
-for periodstart in range(firstperiodstart, lastperiodstart + 1, stepofperiodstart):
-    df = evaldf.loc[(evaldf['corrcalcperiodstart'] == periodstart) & (evaldf['sharperatio'] >= 1) & (evaldf['maxdrawdown'] <= 40) & (evaldf['accumulativeprofit'] > 0)]
-    df = df.sort_values(by= 'accumulativeprofit', ascending= False, ignore_index= True)
-    byprofit = pd.concat([byprofit, df.iloc[[0]]], ignore_index= True)
-    df = df.sort_values(by= 'maxdrawdown', ascending= True, ignore_index= True)
-    bymdd = pd.concat([bymdd, df.iloc[[0]]], ignore_index= True)
-    df = df.sort_values(by= 'sharperatio', ascending= False, ignore_index= True)
-    bysharpe = pd.concat([bysharpe, df.iloc[[0]]], ignore_index= True)
-
 
 evaldf = evaldf.sort_values(by= 'accumulativeprofit', ascending= False, ignore_index= True)
 print(evaldf)
 evaldf.to_excel("Evaluation.xlsx")
 
-"""confirmedstrategiesdf = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades'])
+byprofit = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades'])
+bysharpe = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades'])
+bymdd = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades'])
 
-confirmedstrategiesdf = pd.concat([confirmedstrategiesdf, evaldf[:10]])
+df = evaldf.loc[(evaldf['corrcalcperiodstart'] == periodstart) & (evaldf['sharperatio'] >= 1) & (evaldf['maxdrawdown'] <= 40) & (evaldf['accumulativeprofit'] > 0)]
+df["timeframe"] = pd.to_numeric(df["timeframe"])
+df["corrcalcperiodstart"] = pd.to_numeric(df["corrcalcperiodstart"])
+df["corrcalclperiod"] = pd.to_numeric(df["corrcalclperiod"])
+df["corrcalcsperiod"] = pd.to_numeric(df["corrcalcsperiod"])
+df["corrcalclag"] = pd.to_numeric(df["corrcalclag"])
+df["corrthreshold"] = pd.to_numeric(df["corrthreshold"])
+df["ilperiod"] = pd.to_numeric(df["ilperiod"])
+df["isperiod"] = pd.to_numeric(df["isperiod"])
+df["lowerband"] = pd.to_numeric(df["lowerband"])
+df["higherband"] = pd.to_numeric(df["higherband"])
+df["accumulativeprofit"] = pd.to_numeric(df["accumulativeprofit"])
+df["sharperatio"] = pd.to_numeric(df["sharperatio"])
+df["maxdrawdown"] = pd.to_numeric(df["maxdrawdown"])
+df["numberoftrades"] = pd.to_numeric(df["numberoftrades"])
 
-evaldf = evaldf.sort_values(by= 'sharperatio', ascending= False, ignore_index= True)
-confirmedstrategiesdf = pd.concat([confirmedstrategiesdf, evaldf[:20]])
+for periodstart in range(firstperiodstart, lastperiodstart + 1, stepofperiodstart):
+    byprofit = pd.concat([byprofit, df.loc[df["accumulativeprofit"].idxmax()].to_frame().T], ignore_index= True)
+    bymdd = pd.concat([bymdd, df.loc[df["maxdrawdown"].idxmin()].to_frame().T], ignore_index= True)
+    bysharpe = pd.concat([bysharpe, df.loc[df["sharperatio"].idxmax()].to_frame().T], ignore_index= True)
 
-evaldf = evaldf.sort_values(by= 'maxdrawdown', ascending= True, ignore_index= True)
-confirmedstrategiesdf = pd.concat([confirmedstrategiesdf, evaldf[:20]])
+#"./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(periodend) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr"
+testevaldf = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades']) 
 
-confirmedstrategiesdf = confirmedstrategiesdf.drop_duplicates(ignore_index= True)"""
-
-testresultsdf = pd.DataFrame(columns= ['timeframe', 'corrcalcperiodstart', 'corrcalclperiod', 'corrcalcsperiod', 'corrcalclag', 'corrthreshold', 'ilperiod', 'isperiod', 'lowerband', 'higherband', 'accumulativeprofit', 'sharperatio', 'maxdrawdown' 'numberoftrades'])
-
-for strategy in confirmedstrategiesdf:
-    timeframe = strategy['timeframe']
-    corrcalcperiodstart = strategy['corrcalcperiodstart']
-    corrcalclperiod = strategy['corrcalclperiod']
-    corrcalcsperiod = strategy['corrcalcsperiod']
-    corrcalclag = strategy['corrcalclag']
-    corrthreshold = strategy['corrthreshold']
-    ilperiod = strategy['ilperiod']
-    isperiod = strategy['isperiod']
-    lowerband = strategy['lowerband']
-    higherband =strategy['higherband']
-    accumulativeprofit = strategy['accumulativeprofit']
-    sharperatio = strategy['sharperatio']
-    maxdrawdown = strategy['maxdrawdown']
-    if maxdrawdown < 40 and sharperatio > 1 and accumulativeprofit > 0:
-        df = pd.read_feather("./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(periodend) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
-        testdf = divideindicator(df, periodend, periodend + timedelta(days = 365).total_seconds()*1000)
+for df in [byprofit, bymdd, bysharpe]:
+    combinedsignals = {'entries': [], 'exits': []}
+    for index in range(len(df)):
+        timeframe = int(df['timeframe'][index])
+        periodstart = int(df['corrcalcperiodstart'][index])
+        periodend = int(df['corrcalcperiodstart'][index] + timedelta(2 * 365).total_seconds()*1000)
+        lperiod = int(df['corrcalclperiod'][index])
+        speriod = int(df['corrcalcsperiod'][index])
+        lag = int(df['corrcalclag'][index])
+        slowema = int(df['ilperiod'][index])
+        fastema = int(df['isperiod'][index])
+        corrthreshold = int(df['corrthreshold'][index])
+        lowerband = int(df['lowerband'][index])
+        higherband = int(df['higherband'][index])
+        indicatordf = pd.read_feather("./indicatordatasets2/" + str(timeframe) + '-' + str(periodstart) + '-' + str(periodend) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
+        testdf = divideindicator(indicatordf, periodend, periodend + timedelta(365).total_seconds()*1000)
         calcdf = getpricedf(testdf)
         signals = generate_signals(testdf, lowerband, higherband)
-        testresults = backtestfunc(signals, calcdf)
-        accprofit = testresults[1]
-        sharperatio = testresults[2]
-        maxdd = testresults[3]
-        numberoftrades = len(signals['entries'])
-        newrow = pd.Series({'timeframe' : correlationcalculationtimeframems, 'corrcalclperiod': lperiod, 'corrcalcsperiod': speriod, 'corrcalclag': lag, 'corrthreshold': corrthreshold, 'ilperiod': slowema, 'isperiod': fastema, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': sharperatio, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades})
-        testresultsdf = pd.concat([testresultsdf, newrow.to_frame().T], ignore_index= True)
+        #{'entries': [(1542700800000.0, -1), (1542715200000.0, 1), (1572940800000.0, -1), (1572955200000.0, 1)], 'exits': [1542715200000.0, 1572940800000.0, 1572955200000.0, 1577822400000.0]}
+        combinedsignals['entries'].append(item for item in signals['entries'])
+        combinedsignals['exits'].append(item for item in signals['exits'])
 
-testresultsdf = testresultsdf.sort_values(by= 'accumulativeprofit', ascending= False, ignore_index= True)
-print(testresultsdf)
-testresultsdf.to_excel("Evaluation on test.xlsx")
+    
+    start = firstperiodstart + timedelta(2 * 365).total_seconds()*1000
+    end = start + timedelta(3 * 365).total_seconds()*1000
+    timeframe = 4 * 60 * 60 * 1000
+    pricedf = pd.DataFrame(columns = ['time', 'close', 'pctchange'])
+    
+    with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
+        cursor = connection.cursor()
+        klines = cursor.execute("SELECT time, close FROM public.klines WHERE (time >= %s AND time <= %s AND MOD(time, %s) = 0) ORDER BY time ASC", (start, end, timeframe)).fetchall()
+    
+    for index in range(1, len(klines)):
+        time = klines[index][0]
+        close = klines[index][1]
+        pctchange = (klines[index][1] / klines[index - 1][1]) - 1
+        newrow = pd.Series({'time': time, 'close': close, 'pctchange': pctchange})
+        pricedf = pd.concat([pricedf, newrow.to_frame().T], ignore_index= True)
+
+    results = backtestfunc(signals, pricedf)
+    backtestdf = results[0] #columns = [time, close, pctchange, position, systemreturn, balance, highvalue, drawdown]
+    accprofit = results[1]
+    sharperatio = results[2]
+    yearlysharpe = (31536000000 / correlationcalculationtimeframems) ** (1/2) * sharperatio 
+    maxdd = results[3]
+    numberoftrades = len(signals['entries'])
+    newrow = pd.Series({'timeframe' : correlationcalculationtimeframems, 'corrcalcperiodstart': periodstart, 'corrcalclperiod': lperiod, 'corrcalcsperiod': speriod, 'corrcalclag': lag, 'corrthreshold': corrthreshold, 'ilperiod': slowema, 'isperiod': fastema, 'lowerband': lowerband, 'higherband': higherband, 'accumulativeprofit': accprofit, 'sharperatio': yearlysharpe, 'maxdrawdown': maxdd, 'numberoftrades': numberoftrades})
+    evaldf = pd.concat([evaldf, newrow.to_frame().T], ignore_index= True)
+
+testevaldf = testevaldf.sort_values(by= 'accumulativeprofit', ascending= False, ignore_index= True)
+print(testevaldf)
+testevaldf.to_excel("Evaluation on Test.xlsx")
