@@ -3,6 +3,7 @@ indicatorgen/scrapedata/__pycache__/
 indicatorgen/__pycache__/
 indicatorgen/config.json
 indicatordatasets/
+indicatordatasets2/
 backtest/__pycache__/
 backtest/test.py
 .vscode/
