@@ -13,7 +13,7 @@ def generate_df(cursor, timeframe: int, fastema: int, slowema: int, corrthreshol
     
     walletslist = []
     for wallet in wallets:
-        walletslist.append( wallet[0] )
+        walletslist.append(wallet[0])
 
     for kline in tqdm(klines):
         timestamp = kline[0]
@@ -30,52 +30,61 @@ def generate_df(cursor, timeframe: int, fastema: int, slowema: int, corrthreshol
 def generate_charts(df, fastema, slowema, bbspan):
     
     df['balance_trend'] = df['total_balance'].ewm(span=fastema).mean() - df['total_balance'].ewm(span=slowema).mean()
-    bbands = ta.bbands(close= df['total_balance'], length= bbspan, std= 1)
-    df['bbl'] = bbands['BBL_{}_1.0'.format(str(bbspan))]
-    df['bbu'] = bbands['BBU_{}_1.0'.format(str(bbspan))]
-    df['bbm'] = bbands['BBM_{}_1.0'.format(str(bbspan))]
+    std = 1
+    bbands = ta.bbands(close= df['total_balance'], length= bbspan, std= std)
+    df['bbl'] = bbands['BBL_{}_{}.0'.format(str(bbspan), str(std))]
+    df['bbu'] = bbands['BBU_{}_{}.0'.format(str(bbspan), str(std))]
+    df['bbm'] = bbands['BBM_{}_{}.0'.format(str(bbspan), str(std))]
     df['level0'] = 0
-    df['level1'] = 25000
+    
+    
     plt.figure(1)
 
-    plt.subplot(311)
+    plt.subplot(411)
     plt.plot(df['time'], df['btc_price'])
     plt.yscale('log')
     plt.title('Price')
     plt.grid(True)
 
-    plt.subplot(312)
+
+    plt.subplot(413)
+    plt.plot(df['time'], df['balance_trend'])
+    plt.plot(df['time'], df['level0'], color='gray')
+    plt.yscale('linear')
+    plt.title('Relative Indicator Position in BB')
+    plt.grid(True)
+
+
+    plt.subplot(414)
+    plt.plot(df['time'], (df['total_balance'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
+    plt.plot(df['time'], df['level0'], color='gray')
+    plt.yscale('linear')
+    plt.title('Total Balance')
+    plt.grid(True)
+
+
+    plt.subplot(412)
     plt.plot(df['time'], df['total_balance'])
     plt.yscale('log')
     plt.title('Total Balance')
     plt.grid(True)
 
-    plt.subplot(313)
-    plt.plot(df['time'], (df['total_balance'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
-    #plt.plot(df['time'], df['balance_trend'])
-    plt.plot(df['time'], df['level0'], color='gray')
-    #plt.plot(df['time'], df['bbl'], color = 'red')
-    #plt.plot(df['time'], df['bbu'], color = 'red')
-    #plt.plot(df['time'], df['bbm'], color = 'yellow')
-    plt.yscale('linear')
-    plt.title('Total Balance Trend')
-    plt.grid(True)
 
-    plt.figure(2)
+    """plt.figure(2)
     plt.plot(df['time'], df['total_balance'])
     #plt.plot(df['time'], (df['balance_trend'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
     plt.plot(df['time'], df['level0'], color='gray')
     plt.plot(df['time'], df['bbl'], color = 'red')
     plt.plot(df['time'], df['bbu'], color = 'red')
-    plt.plot(df['time'], df['bbm'], color = 'yellow')
+    plt.plot(df['time'], df['bbm'], color = 'yellow')"""
 
-    plt.figure(3)
+    """plt.figure(3)
     #plt.plot(df['time'], df['balance_trend'])
     plt.plot(df['time'], (df['total_balance'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
     plt.plot(df['time'], df['level0'], color='gray')
     #plt.plot(df['time'], df['bbl'], color = 'red')
     #plt.plot(df['time'], df['bbu'], color = 'red')
-    #plt.plot(df['time'], df['bbm'], color = 'yellow')
+    #plt.plot(df['time'], df['bbm'], color = 'yellow')"""
 
     plt.show()
 
