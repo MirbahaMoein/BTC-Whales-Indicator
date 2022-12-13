@@ -147,7 +147,7 @@ with pg.connect("dbname = whales user = postgres password = NURAFIN") as connect
                                 maxcorr = cursor.execute("SELECT MAX(correlation) FROM public.correlations WHERE (speriod = %s AND lperiod = %s AND lag = %s AND timeframems = %s AND periodstart = %s AND correlation != 'NaN')", (speriod, lperiod, lag, correlationcalculationtimeframems, periodstart)).fetchall()[0][0]
                                 for corrthreshold in [0, maxcorr * 1/4, maxcorr * 2/4, maxcorr * 3/4]:    
                                     try:
-                                        df = pd.read_feather("./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(int(periodend)) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
+                                        df = pd.read_feather("./indicatordatasets2/" + str(correlationcalculationtimeframems) + '-' + str(periodstart) + '-' + str(int(periodend + timedelta(days = 365).total_seconds()*1000)) + '-' + str(lperiod) + '-' + str(speriod) + '-' + str(lag) + '-' + str(slowema) + '-' + str(fastema) + '-' + str(corrthreshold) + ".ftr")
                                     except:
                                         df = generate_df(cursor, correlationcalculationtimeframems, fastema, slowema, corrthreshold, periodstart, periodend + timedelta(days = 365).total_seconds()*1000, speriod, lperiod, lag)
                                         save_feather(df, correlationcalculationtimeframems, periodstart, periodend + timedelta(days = 365).total_seconds()*1000, lperiod, speriod, lag, slowema, fastema, corrthreshold)
