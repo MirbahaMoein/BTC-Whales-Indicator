@@ -37,7 +37,6 @@ def generate_charts(df, fastema, slowema, bbspan):
     df['bbm'] = bbands['BBM_{}_{}.0'.format(str(bbspan), str(std))]
     df['level0'] = 0
     
-    
     plt.figure(1)
 
     plt.subplot(411)
@@ -46,14 +45,12 @@ def generate_charts(df, fastema, slowema, bbspan):
     plt.title('Price')
     plt.grid(True)
 
-
     plt.subplot(413)
     plt.plot(df['time'], df['balance_trend'])
     plt.plot(df['time'], df['level0'], color='gray')
     plt.yscale('linear')
     plt.title('Relative Indicator Position in BB')
     plt.grid(True)
-
 
     plt.subplot(414)
     plt.plot(df['time'], (df['total_balance'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
@@ -62,29 +59,11 @@ def generate_charts(df, fastema, slowema, bbspan):
     plt.title('Total Balance')
     plt.grid(True)
 
-
     plt.subplot(412)
     plt.plot(df['time'], df['total_balance'])
     plt.yscale('log')
     plt.title('Total Balance')
     plt.grid(True)
-
-
-    """plt.figure(2)
-    plt.plot(df['time'], df['total_balance'])
-    #plt.plot(df['time'], (df['balance_trend'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
-    plt.plot(df['time'], df['level0'], color='gray')
-    plt.plot(df['time'], df['bbl'], color = 'red')
-    plt.plot(df['time'], df['bbu'], color = 'red')
-    plt.plot(df['time'], df['bbm'], color = 'yellow')"""
-
-    """plt.figure(3)
-    #plt.plot(df['time'], df['balance_trend'])
-    plt.plot(df['time'], (df['total_balance'] - df['bbl']) / (df['bbu'] - df['bbl']) - 0.5)
-    plt.plot(df['time'], df['level0'], color='gray')
-    #plt.plot(df['time'], df['bbl'], color = 'red')
-    #plt.plot(df['time'], df['bbu'], color = 'red')
-    #plt.plot(df['time'], df['bbm'], color = 'yellow')"""
 
     plt.show()
 
