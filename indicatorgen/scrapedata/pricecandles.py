@@ -27,7 +27,7 @@ def init_client():
 def get_table(client, symbol, endtimestamp, timeframe):
     try:
         table = client.klines(symbol, "1m", startTime=endtimestamp -
-                              timeframe, endTime=endtimestamp, limit=1000)
+                              timeframe -1, endTime=endtimestamp+1, limit=1000)
         if len(table) > 0:
             data = pd.DataFrame(table)
             data.columns = ["open_timestamp", "open", "high", "low", "close", "volume", "close_timestamp",

@@ -74,12 +74,19 @@ def save_feather(df):
     df.to_feather("./dataset/indicator.ftr")
 
 
-with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
-    cursor = connection.cursor()
-    df = pd.read_feather("./dataset/indicator.ftr")
-    #df = generate_df(cursor, 86400000, 7, 17, 0.25, datetime(2018,1,1).timestamp()*1000, datetime(2022,10,1).timestamp()*1000)
-    save_feather(df)
-    fastema = 7
-    slowema = 17
-    bbspan = 20
-    generate_charts(df, fastema, slowema, bbspan)
+#with pg.connect("dbname = whales user = postgres password = NURAFIN") as connection:
+#    cursor = connection.cursor()
+#    df = pd.read_feather("./dataset/indicator.ftr")
+#    #df = generate_df(cursor, 86400000, 7, 17, 0.25, datetime(2018,1,1).timestamp()*1000, datetime(2022,10,1).timestamp()*1000)
+#    #save_feather(df)
+#    fastema = 7
+#    slowema = 17
+#    bbspan = 20
+#    generate_charts(df, fastema, slowema, bbspan)
+
+
+df = pd.read_feather("./dataset/indicator.ftr")
+fastema = 7
+slowema = 17
+bbspan = 50
+generate_charts(df, fastema, slowema, bbspan)

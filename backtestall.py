@@ -162,7 +162,7 @@ with pg.connect("dbname = whales user = postgres password = NURAFIN") as connect
                                             for higherband in tqdm(range(lowerband + stepsize, maxindicatorvalue - stepsize, stepsize), leave= False, position= 2):
                                                 signals = generate_signals(traindf, lowerband, higherband)
                                                 results = backtestfunc(signals, calcdf)
-                                                backtestdf = results[0] #columns = [time, close, pctchange, position, systemreturn, balance, highvalue, drawdown]
+                                                backtestdf = results[0] # columns= [time, close, pctchange, position, systemreturn, balance, highvalue, drawdown]
                                                 accprofit = results[1]
                                                 sharperatio = results[2]
                                                 yearlysharpe = (31536000000 / correlationcalculationtimeframems) ** (1/2) * sharperatio 
