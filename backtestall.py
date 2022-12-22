@@ -3,6 +3,7 @@ import pandas as pd
 import psycopg as pg
 from datetime import *
 import numpy as np
+from matplotlib import pyplot as plt
 pd.options.mode.chained_assignment = None
 
 
@@ -18,7 +19,7 @@ def generate_df(cursor, timeframe, fastema, slowema, corrthreshold, start, end, 
     for kline in tqdm(klines):
         timestamp = kline[0]
         btcprice = kline[1]
-        totalbalance = cursor.execute("SELECT SUM(balance_btc) FROM public.historicalwalletbalance WHERE (starttime <= %s AND endtime >= %s AND address = ANY(%s))", (timestamp, timestamp, walletslist)).fetchall()[0][0]
+        totalbalance = cursor.execute("SELECT SUM(balance_btc) FROM public.walletbalancetimeseries WHERE (time = %s AND address = ANY(%s))", (timestamp, walletslist)).fetchall()[0][0]
         new_row = pd.Series({'time': timestamp, 'total_balance': totalbalance, 'btc_price': btcprice})
         df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
     df['time'] = pd.to_datetime(df['time'], unit='ms')

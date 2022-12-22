@@ -20,10 +20,6 @@ def generatetimestamps(cursor) -> tuple:
     return firstopentimestamp, lastopentimestamp, nowtimestamp
 
 
-def init_client():
-    return binance.spot.Spot()
-
-
 def get_table(client, symbol, endtimestamp, timeframe):
     try:
         table = client.klines(symbol, "1m", startTime=endtimestamp -
@@ -42,7 +38,7 @@ def get_table(client, symbol, endtimestamp, timeframe):
 
 
 def updateklines(symbol, timeframe, startingtime, connection, cursor):
-    client = init_client()
+    client = binance.spot.Spot()
     firsttimestamp, lasttimestamp, nowtimestamp = generatetimestamps(cursor)
     pbar = tqdm(desc='klines', total=int((nowtimestamp - startingtime + firsttimestamp -
                 lasttimestamp + 2 * timeframe) / (timeframe * 1000)))
@@ -50,13 +46,13 @@ def updateklines(symbol, timeframe, startingtime, connection, cursor):
     while timestamp > lasttimestamp - timeframe:
         data = get_table(client, symbol, timestamp, timeframe*1000)
         saveklines(data, connection, cursor)
-        timestamp -= timeframe * 1000
+        timestamp -= timeframe * 1000 - 1
         pbar.update(1)
     timestamp = firsttimestamp + timeframe
     while timestamp > startingtime:
         data = get_table(client, symbol, timestamp, timeframe*1000)
         saveklines(data, connection, cursor)
-        timestamp -= timeframe * 1000
+        timestamp -= timeframe * 1000 - 1
         pbar.update(1)
 
 
