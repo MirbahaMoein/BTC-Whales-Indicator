@@ -4,6 +4,7 @@ import re
 import datetime
 from datetime import *
 import tqdm
+import json
 
 browserheader = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"}
@@ -249,3 +250,42 @@ def updatetxs(wallets, connection, cursor, runtime):
                 savetxs(walletaddress, blocknumber, txtime, btcamount, btcbalance, usdbalance, usdprofit, txs, connection, cursor, runtime)
 
 
+def gettxs(walletaddress, baseurl, apipagenumber):
+    endpoint = "/address/{}/tx".format(walletaddress)
+    response = requests.get(baseurl + endpoint, params= {'page': apipagenumber, 'pagesize': 50})
+    txs = json.loads(response.text)['data']['list']
+    return txs
+
+def updatetxsapi(wallets, connection, cursor, runtime):
+    baseurl = "https://chain.api.btc.com/v3"
+    for wallet in tqdm.tqdm(wallets, desc="Updating Transactions"):
+        apipagenumber = 1
+        walletaddress = wallet[3]
+        walletaddress = '35pgGeez3ou6ofrpjt8T7bvC9t6RrUK4p6'
+        lasttxondb = cursor.execute("SELECT * FROM public.transactions WHERE (address = %s AND time <= %s) ORDER BY time DESC LIMIT 1", (walletaddress, runtime)).fetchall()[0]
+        lasttxondbtime = lasttxondb[2]
+        lasttxondbamount = lasttxondb[3]
+        endpoint = "/address/{}/tx".format(walletaddress)
+        response = requests.get(baseurl + endpoint, params= {'page': apipagenumber, 'pagesize': 50})
+        txs = json.loads(response.text)['data']['list']
+        lasttx = txs[0]
+        lasttxtime = lasttx['block_time'] * 1000
+        lasttxamount = lasttx['balance_diff'] / 10**8
+        if lasttxondbtime != lasttxtime or lasttxondbamount != lasttxamount:
+            while True:
+                endpoint = "/address/{}/tx".format(walletaddress)
+                response = requests.get(baseurl + endpoint, params= {'page': apipagenumber, 'pagesize': 50})
+                txs = gettxs(walletaddress, baseurl, apipagenumber)
+                if len(txs) == 0:
+                    break
+                for tx in txs:
+                    blocknumber = tx['block_height']
+                    txtime = tx['block_time'] * 1000
+                    txamount = tx['balance_diff'] / 10**8
+                    try:                        
+                        cursor.execute("INSERT INTO public.transactionsapi VALUES (%s, %s, %s, %s)", (walletaddress, blocknumber, txtime, txamount))
+                    except:
+                        cursor.execute("ROLLBACK")
+                    connection.commit()
+                apipagenumber += 1
+        
