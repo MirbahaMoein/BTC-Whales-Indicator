@@ -238,7 +238,6 @@ def savetxs(walletaddress: str, blocknumber, txtime, btcamount, btcbalance, usdb
             return False
 
 
-
 def updatetxs(wallets, connection, cursor, runtime):
     for wallet in tqdm.tqdm(wallets, desc="Updating Transactions"):
         if eligible(wallet, cursor):
