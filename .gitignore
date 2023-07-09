@@ -16,4 +16,4 @@ Evaluation on test.xlsx
 ~$Evaluation on test.xlsx
 backtestdfs/
 dataset/
-./venv/
+.venv/
